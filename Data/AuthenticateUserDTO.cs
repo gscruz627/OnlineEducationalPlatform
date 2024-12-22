@@ -1,0 +1,8 @@
+﻿namespace OnlineEducationaAPI.Data
+{
+    public class AuthenticateUserDTO
+    {
+        public required string Email { get; set; }
+        public required string Password { get; set; }
+    }
+}

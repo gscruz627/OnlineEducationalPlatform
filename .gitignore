@@ -1,0 +1,60 @@
+# Build Folders
+bin/
+obj/
+
+# User-Specific and IDE Files
+.vs/
+*.user
+*.suo
+
+# Logs and Temporary Files
+*.log
+*.tmp
+*.bak
+*.swp
+*.sln.ide
+
+# Entity Framework Migrations (Optional - uncomment if you don't want to track them)
+Migrations/
+
+# Publish Output
+wwwroot/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Rider IDE
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+# Dependency Folders
+node_modules/
+
+# Package Manager Files
+*.nupkg
+*.snupkg
+
+# Debug and Release Folders
+Debug/
+Release/
+
+# Coverage Output
+coverage/
+*.coverage
+*.coveragexml
+*.lcov
+
+# Application Insights
+ApplicationInsights.config
+ApplicationInsights.json
+
+# Docker Files
+docker-compose.override.yml
+.dockerignore
+
+# Sensitive Configuration (Optional - include only sanitized versions)
+secrets.json
+appsettings.Development.json
