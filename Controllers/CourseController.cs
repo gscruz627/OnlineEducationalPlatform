@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using OnlineEducationaAPI.Data;
 using OnlineEducationaAPI.Models.Entities;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace OnlineEducationaAPI.Controllers
 {
@@ -15,6 +17,7 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         [Route("{id:Guid}")]
         public IActionResult GetCourse(Guid id)
         {
@@ -26,6 +29,7 @@ namespace OnlineEducationaAPI.Controllers
             return Ok(course);
         }
         [HttpGet]
+        [Authorize]
         public IActionResult GetAll()
         {
             var courses = dbcontext.Courses.ToList();
@@ -33,8 +37,21 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public IActionResult AddNew(AddNewCourseDTO courseDTO)
         {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var adminCheck = dbcontext.Administrators.Find(userId);
+             if (adminCheck is null)
+            {
+                return Unauthorized();
+            }
+            // Check if course under that name already exists
+            var courseCheck = dbcontext.Courses.FirstOrDefault( (course) => course.Title == courseDTO.Title);
+            if (courseCheck is not null)
+            {
+                return Unauthorized();
+            }
             var courseEntity = new Course()
             {
                 Title = courseDTO.Title,

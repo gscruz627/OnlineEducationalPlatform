@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 namespace OnlineEducationaAPI.Controllers
 {
@@ -20,11 +21,20 @@ namespace OnlineEducationaAPI.Controllers
             this.dbcontext = dbcontext;
             this.configuration = configuration;
         }
+        
 
         [HttpPost]
-        [Route("register")]
+        [Authorize]
+        [Route("/register")]
         public IActionResult Register(AddInstructorDTO instructorDTO)
         {
+            // Verify that a valid administrator is making a register action
+            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var adminFound = dbcontext.Administrators.Find(userId);
+            if (adminFound is not null)
+            {
+                return Unauthorized();
+            }
             var hasher = new PasswordHasher<Instructor>();
             var instructor = new Instructor()
             {
@@ -36,8 +46,9 @@ namespace OnlineEducationaAPI.Controllers
             dbcontext.SaveChanges();
             return Ok("Successfully created Instructor");
         }
+
         [HttpPost]
-        [Route("login")]
+        [Route("/login")]
         public IActionResult Login(AuthenticateUserDTO instructorDTO)
         {
             var hasher = new PasswordHasher<Instructor>();
@@ -72,6 +83,27 @@ namespace OnlineEducationaAPI.Controllers
             // We will return the jwt token and the client is responsible for decrypting
             // the token and getting the instructorID
             return Ok(jwt_token);
+        }
+
+        [HttpDelete]
+        [Authorize]
+        [Route("{id:Guid}")]
+        public IActionResult DeleteInstructor(Guid id)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var adminCheck = dbcontext.Administrators.Find(userId);
+            if (adminCheck is null)
+            {
+                return Unauthorized();
+            }
+            var instructor = dbcontext.Instructors.Find(id);
+            if (instructor is null)
+            {
+                return NotFound();
+            }
+            dbcontext.Instructors.Remove(instructor);
+            dbcontext.SaveChanges();
+            return Ok("Instructor was removed");
         }
     }
 }

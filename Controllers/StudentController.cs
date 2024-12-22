@@ -6,6 +6,7 @@ using OnlineEducationaAPI.Models.Entities;
 using System.Security.Claims;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authorization;
 
 namespace OnlineEducationaAPI.Controllers
 {
@@ -50,10 +51,16 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         [Route("/register")]
         public IActionResult Register(AddStudentDTO studentDTO)
         {
-            
+            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var adminCheck = dbcontext.Administrators.Find(userId);
+            if (adminCheck is null)
+            {
+                return Unauthorized();
+            }
             var studentCheck = dbcontext.Students.FirstOrDefault((student) => student.Email == studentDTO.Email);
             if (studentCheck is not null)
             {
@@ -103,6 +110,27 @@ namespace OnlineEducationaAPI.Controllers
             );
             var jwt_token = new JwtSecurityTokenHandler().WriteToken(token);
             return Ok(jwt_token);
+        }
+
+        [HttpDelete]
+        [Authorize]
+        [Route("{id:Guid}")]
+        public IActionResult DeleteStudent(Guid id)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var adminCheck = dbcontext.Administrators.Find(userId);
+            if (adminCheck is null)
+            {
+                return Unauthorized();
+            }
+            var student = dbcontext.Students.Find(id);
+            if (student is null)
+            {
+                return NotFound();
+            }
+            dbcontext.Students.Remove(student);
+            dbcontext.SaveChanges();
+            return Ok("Student was removed");
         }
     }
 }
