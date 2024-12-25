@@ -17,5 +17,6 @@ namespace OnlineEducationaAPI.Data
         public DbSet<Section> Sections { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<Administrator> Administrators { get; set; }
+        public DbSet<Submission> Submissions { get; set; }
     }
 }

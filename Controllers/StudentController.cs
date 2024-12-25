@@ -35,24 +35,9 @@ namespace OnlineEducationaAPI.Controllers
             return Ok(student);
         }
 
-        [HttpGet]
-        [Route("/section/{id:Guid}")]
-        public IActionResult GetStudentsbySection(Guid id)
-        {
-            var students = dbcontext.Enrollments
-            .Where(enrollment => enrollment.SectionID == id)
-            .Join(dbcontext.Students,
-            enrollment => enrollment.StudentID,
-            student => student.Id,
-            (enrollment, student) => student)
-            .ToList();
-
-            return Ok(students);
-        }
-
         [HttpPost]
         [Authorize]
-        [Route("/register")]
+        [Route("register")]
         public IActionResult Register(AddStudentDTO studentDTO)
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
@@ -80,7 +65,7 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpPost]
-        [Route("/login")]
+        [Route("login")]
         public IActionResult Login(AuthenticateUserDTO studentDTO)
         {
             var student = dbcontext.Students.FirstOrDefault((student) => student.Email == studentDTO.Email);
@@ -110,6 +95,27 @@ namespace OnlineEducationaAPI.Controllers
             );
             var jwt_token = new JwtSecurityTokenHandler().WriteToken(token);
             return Ok(jwt_token);
+        }
+
+        [HttpPatch]
+        [Authorize]
+        [Route("{id:Guid}")]
+        public IActionResult PatchName(Guid id, [FromBody] string newname)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var adminCheck = dbcontext.Instructors.Find(userId);
+            if (adminCheck is null)
+            {
+                return Unauthorized();
+            }
+            var student = dbcontext.Students.Find(id);
+            if (student is null)
+            {
+                return NotFound();
+            }
+            student.Name = newname;
+            dbcontext.SaveChanges();
+            return Ok(student);
         }
 
         [HttpDelete]

@@ -21,11 +21,29 @@ namespace OnlineEducationaAPI.Controllers
             this.dbcontext = dbcontext;
             this.configuration = configuration;
         }
-        
+
+        [HttpGet]
+        [Authorize]
+        [Route("{id:Guid}")]
+        public IActionResult Get(Guid id)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var adminCheck = dbcontext.Administrators.Find(userId);
+            if (adminCheck is null)
+            {
+                return Unauthorized();
+            }
+            var instructor = dbcontext.Instructors.Find(id);
+            if (instructor is null)
+            {
+                return NotFound();
+            }
+            return Ok(instructor);
+        }
 
         [HttpPost]
         [Authorize]
-        [Route("/register")]
+        [Route("register")]
         public IActionResult Register(AddInstructorDTO instructorDTO)
         {
             // Verify that a valid administrator is making a register action
@@ -48,7 +66,7 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpPost]
-        [Route("/login")]
+        [Route("login")]
         public IActionResult Login(AuthenticateUserDTO instructorDTO)
         {
             var hasher = new PasswordHasher<Instructor>();
@@ -85,6 +103,27 @@ namespace OnlineEducationaAPI.Controllers
             return Ok(jwt_token);
         }
 
+        [HttpPatch]
+        [Authorize]
+        [Route("{id:Guid}")]
+        public IActionResult PatchName(Guid id, [FromBody] string newname)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var adminCheck = dbcontext.Instructors.Find(userId);
+            if (adminCheck is null)
+            {
+                return Unauthorized();
+            }
+            var instructor = dbcontext.Instructors.Find(id);
+            if (instructor is null)
+            {
+                return NotFound();
+            }
+            instructor.Name = newname;
+            dbcontext.SaveChanges();
+            return Ok(instructor);
+        }
+
         [HttpDelete]
         [Authorize]
         [Route("{id:Guid}")]
@@ -104,6 +143,26 @@ namespace OnlineEducationaAPI.Controllers
             dbcontext.Instructors.Remove(instructor);
             dbcontext.SaveChanges();
             return Ok("Instructor was removed");
+        }
+
+        [HttpGet]
+        [Authorize]
+        [Route("sections/{id:Guid}")]
+        public IActionResult SectionsByInstructor(Guid id)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var adminCheck = dbcontext.Administrators.Find(userId);
+            if (adminCheck is null)
+            {
+                return Unauthorized();
+            }
+            var instructor = dbcontext.Instructors.Find(id);
+            if(instructor is null)
+            {
+                return NotFound();
+            }
+            var sections = dbcontext.Sections.Where((section) => section.InstructorID == id);
+            return Ok(sections);
         }
     }
 }

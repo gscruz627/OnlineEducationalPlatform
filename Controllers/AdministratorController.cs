@@ -10,7 +10,7 @@ using System.Text;
 namespace OnlineEducationaAPI.Controllers
 {
     [ApiController]
-    [Route("/authority")]
+    [Route("api/authority")]
     public class AdministratorController : Controller
     {
         private readonly ApplicationDBContext dbcontext;
@@ -23,7 +23,7 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpPost]
-        [Route("/register")]
+        [Route("register")]
         public IActionResult Register(AdministratorDTO adminDTO)
         {
             var checkAdmin = dbcontext.Administrators.FirstOrDefault((admin) => admin.Username == adminDTO.Username);
@@ -31,6 +31,7 @@ namespace OnlineEducationaAPI.Controllers
             {
                 return Unauthorized();
             }
+            
             var hasher = new PasswordHasher<Administrator>();
             var admin = new Administrator()
             {
@@ -43,7 +44,7 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpPost]
-        [Route("/login")]
+        [Route("login")]
         public IActionResult Login(AdministratorDTO adminDTO)
         {
             var admin = dbcontext.Administrators.FirstOrDefault((admin) => admin.Username == adminDTO.Username);
@@ -54,6 +55,10 @@ namespace OnlineEducationaAPI.Controllers
             var hasher = new PasswordHasher<Administrator>();
             var verified = hasher.VerifyHashedPassword(null, admin.Password, adminDTO.Password);
 
+            if(verified != PasswordVerificationResult.Success)
+            {
+                return Unauthorized();
+            }
             var key = configuration["jwt:secret_key"];
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);

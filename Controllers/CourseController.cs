@@ -21,6 +21,13 @@ namespace OnlineEducationaAPI.Controllers
         [Route("{id:Guid}")]
         public IActionResult GetCourse(Guid id)
         {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var adminCheck = dbcontext.Administrators.Find(userId);
+            var instructorCheck = dbcontext.Instructors.Find(userId);
+            if (adminCheck is null && instructorCheck is null)
+            {
+                return Unauthorized();
+            }
             var course = dbcontext.Courses.Find(id);
             if (course is null)
             {
@@ -28,10 +35,18 @@ namespace OnlineEducationaAPI.Controllers
             }
             return Ok(course);
         }
+
         [HttpGet]
         [Authorize]
         public IActionResult GetAll()
         {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var adminCheck = dbcontext.Administrators.Find(userId);
+            var instructorCheck = dbcontext.Instructors.Find(userId);
+            if (adminCheck is null && instructorCheck is null)
+            {
+                return Unauthorized();
+            }
             var courses = dbcontext.Courses.ToList();
             return Ok(courses);
         }
@@ -63,5 +78,51 @@ namespace OnlineEducationaAPI.Controllers
             return CreatedAtAction("GetCourse", new { id = courseEntity.Id }, courseEntity);
         }
 
+        [HttpPatch]
+        [Authorize]
+        [Route("{id:Guid}")]
+        public IActionResult Edit(Guid id, [FromBody] AddNewCourseDTO courseDTO)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var adminCheck = dbcontext.Administrators.Find(userId);
+            if (adminCheck is null)
+            {
+                return Unauthorized();
+            }
+            var course = dbcontext.Courses.Find(id);
+            if (course is null)
+            {
+                return NotFound();
+            }
+            course.Title = courseDTO.Title;
+            course.CourseCode = courseDTO.CourseCode;
+            course.ImageURL = courseDTO.ImageURL;
+            dbcontext.SaveChanges();
+            return Ok(course);
+
+        }
+
+        [HttpDelete]
+        [Authorize]
+        [Route("{id:Guid}")]
+        public IActionResult Remove(Guid id)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var adminCheck = dbcontext.Administrators.Find(userId);
+            if (adminCheck is null)
+            {
+                return Unauthorized();
+            }
+            var course = dbcontext.Courses.Find(id);
+
+            if (course is null)
+            {
+                return NotFound();
+            }
+            dbcontext.Courses.Remove(course);
+            dbcontext.SaveChanges();
+            return Ok("Removed");
+
+        }
     }
 }
