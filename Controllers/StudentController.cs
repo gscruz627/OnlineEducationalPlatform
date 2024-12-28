@@ -35,6 +35,13 @@ namespace OnlineEducationaAPI.Controllers
             return Ok(student);
         }
 
+        [HttpGet]
+        [Authorize]
+        public IActionResult GetAll()
+        {
+            var students = dbcontext.Students.ToList();
+            return Ok(students);
+        }
         [HttpPost]
         [Authorize]
         [Route("register")]

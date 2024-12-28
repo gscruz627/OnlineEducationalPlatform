@@ -73,7 +73,8 @@ namespace OnlineEducationaAPI.Controllers
                     signingCredentials: credentials
             );
             var jwt_token = new JwtSecurityTokenHandler().WriteToken(token);
-            return Ok(jwt_token);
+            
+            return Ok(new { Admin = new { Id = admin.Id, Username = admin.Username}, Token = jwt_token });
         }
 
     }

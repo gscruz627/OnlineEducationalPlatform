@@ -1,0 +1,18 @@
+div.topbar {
+    background-image: url('https://cdn.wallpapersafari.com/41/13/oSr2gU.jpg');
+    background-size: cover;
+    display:grid;
+    grid-template-columns: 20% 80%;
+    column-gap:0;
+    max-height:200px;
+    height:200px;
+    align-items: center;
+}
+div.topbar > div{
+    width:100%;
+}
+div.topbar img{
+    width: 60%;
+    height: 75%;
+    margin-left:30%;
+}

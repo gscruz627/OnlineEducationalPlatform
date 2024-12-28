@@ -14,12 +14,14 @@ namespace OnlineEducationaAPI.Controllers
     [Route("api/instructors")]
     public class InstructorController : Controller
     {
+        private readonly ILogger<InstructorController> _logger;
         private readonly ApplicationDBContext dbcontext;
         private readonly IConfiguration configuration;
-        public InstructorController(ApplicationDBContext dbcontext, IConfiguration configuration)
+        public InstructorController(ApplicationDBContext dbcontext, IConfiguration configuration, ILogger<InstructorController> logger)
         {
             this.dbcontext = dbcontext;
             this.configuration = configuration;
+            this._logger = logger;
         }
 
         [HttpGet]
@@ -39,6 +41,27 @@ namespace OnlineEducationaAPI.Controllers
                 return NotFound();
             }
             return Ok(instructor);
+        }
+
+        [HttpGet]
+        [Authorize]
+        public IActionResult GetAll()
+        {
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
+            Console.WriteLine("-------");
+            Console.WriteLine("Claims:");
+            Console.WriteLine(userId);
+            foreach (var claim in User.Claims)
+            {
+                Console.WriteLine($"{claim.Type}: {claim.Value}");
+            }
+            var adminCheck = dbcontext.Administrators.Find(userId);
+            if (adminCheck is null)
+            {
+                return Unauthorized(new { msg = $"aa {userId}" });
+            }
+            var instructors = dbcontext.Instructors.ToList();
+            return Ok(instructors);
         }
 
         [HttpPost]

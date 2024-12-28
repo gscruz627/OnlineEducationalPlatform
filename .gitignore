@@ -31,8 +31,7 @@ Thumbs.db
 .vscode/
 
 # Dependency Folders
-node_modules/
-
+client/node_modules/
 # Package Manager Files
 *.nupkg
 *.snupkg

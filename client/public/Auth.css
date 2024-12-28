@@ -1,0 +1,59 @@
+div.form-container{
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto auto;
+    border:1px solid red;
+    width: min(500px, 100%);
+    text-align: center;
+    font-size:22px;
+}
+
+div.form-tab-slide{
+    border:1px solid blue;
+    width: min(500px, 100%);
+}
+div.form-container ul, div.form-container li{
+    list-style-type:none;
+    display:inline-block;
+    padding:0;
+}
+div.form-container li{
+    background-color: rgb(88, 143, 188);
+    color: #FFF;
+    padding: 5px 15px;
+    border: 3px solid transparent;
+    cursor:pointer;
+}
+div.form-container li:first-child{
+    border-top-left-radius:15px;
+    border-bottom-left-radius:15px;
+    padding-left:25px;
+}
+
+div.form-container li:last-child{
+    border-top-right-radius:15px;
+    border-bottom-right-radius:15px;
+    padding-right:25px;
+}
+div.form-container li:hover{
+    background-color: #ededed;
+    color: rgb(32, 102, 159);
+    border: 3px solid rgb(88, 143, 188);
+}
+div.form-container li.selected-choice{
+    background-color: rgb(32,102,159);
+    color:#FFF;
+}
+div.form-container input[type=text], div.form-container input[type=password], div.form-container input[type=email] {
+    border: 2px solid rgb(186, 186, 186);
+    background-color: #ededed;
+    width:75%;
+    padding:15px 25px;
+    border-radius:15px;
+    font-size:22px;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif
+}
+div.form-container button{
+    margin: 30px 0;
+}
