@@ -3,14 +3,12 @@ div.form-container{
     align-items: center;
     justify-content: center;
     margin: auto auto;
-    border:1px solid red;
     width: min(500px, 100%);
     text-align: center;
     font-size:22px;
 }
 
 div.form-tab-slide{
-    border:1px solid blue;
     width: min(500px, 100%);
 }
 div.form-container ul, div.form-container li{
@@ -45,7 +43,7 @@ div.form-container li.selected-choice{
     background-color: rgb(32,102,159);
     color:#FFF;
 }
-div.form-container input[type=text], div.form-container input[type=password], div.form-container input[type=email] {
+div.form-container input[type=text], div.form-container input[type=password], div.form-container input[type=email], .common-input {
     border: 2px solid rgb(186, 186, 186);
     background-color: #ededed;
     width:75%;

@@ -9,6 +9,12 @@ import Profile from '../views/Profile'
 import LoggedOut from '../views/LoggedOut'
 import Login from '../views/Login'
 import Instructors from '../views/Instructors'
+import CreateInstructor from '../views/CreateInstructor'
+import Students from '../views/Students'
+import CreateStudent from '../views/CreateStudent'
+import Courses from '../views/Courses'
+import CreateCourse from '../views/CreateCourse'
+import Course from '../views/Course'
 
 const App = () => {
 
@@ -26,6 +32,12 @@ const App = () => {
               <Route path="/signout" elment={ <LoggedOut/>} />
               <Route path="/login" element={ <Login />} />
               <Route path="/instructors" element={ <Instructors/>}/>
+              <Route path="/createinstructor" element={ <CreateInstructor/>} />
+              <Route path="/students" element={ <Students/>} />
+              <Route path="/createstudent" element={ <CreateStudent/>} />
+              <Route path="/courses" element={ <Courses/>} />
+              <Route path="/createcourse" element={ <CreateCourse/>} />
+              <Route path="/course/:courseId" element={<Course/>} />
               <Route path="*" element={ <Error/>} />
             </Routes>
           <hr style={{"width":"95%"}}/>

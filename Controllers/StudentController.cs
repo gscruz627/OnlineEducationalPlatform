@@ -47,7 +47,7 @@ namespace OnlineEducationaAPI.Controllers
         [Route("register")]
         public IActionResult Register(AddStudentDTO studentDTO)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var adminCheck = dbcontext.Administrators.Find(userId);
             if (adminCheck is null)
             {
@@ -56,7 +56,7 @@ namespace OnlineEducationaAPI.Controllers
             var studentCheck = dbcontext.Students.FirstOrDefault((student) => student.Email == studentDTO.Email);
             if (studentCheck is not null)
             {
-                return Unauthorized();
+                return BadRequest("User by that name already exists!");
             }
             var hasher = new PasswordHasher<Instructor>();
 
@@ -109,8 +109,8 @@ namespace OnlineEducationaAPI.Controllers
         [Route("{id:Guid}")]
         public IActionResult PatchName(Guid id, [FromBody] string newname)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
-            var adminCheck = dbcontext.Instructors.Find(userId);
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
+            var adminCheck = dbcontext.Administrators.Find(userId);
             if (adminCheck is null)
             {
                 return Unauthorized();
@@ -130,7 +130,7 @@ namespace OnlineEducationaAPI.Controllers
         [Route("{id:Guid}")]
         public IActionResult DeleteStudent(Guid id)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var adminCheck = dbcontext.Administrators.Find(userId);
             if (adminCheck is null)
             {

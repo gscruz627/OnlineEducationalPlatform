@@ -18,9 +18,9 @@ const Navbar = () => {
                 <li><Link to="/">Home</Link></li>
                 { (user && (role === "admin")) && (
                     <>
-                    <li>Courses</li>
+                    <li>Manage Courses</li>
                     <li><Link to="/instructors">Manage Instructors</Link></li>
-                    <li>Manage Students</li>
+                    <li><Link to="/students">Manage Students</Link></li>
                     </>
                 )}
                 { user ? (

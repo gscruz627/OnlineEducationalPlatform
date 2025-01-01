@@ -9,6 +9,7 @@ div.side-bar{
 div.side-bar-item{
     border:3px solid rgb(143, 143, 143);
     padding: 0 15px;
+    margin-bottom:15px;
 }
 div.side-bar h2{
     color: rgb(89, 46, 16);
@@ -36,5 +37,8 @@ input[type=text].generic-bar{
 }
 div.instructor-item{
     display:grid;
-    grid-template-columns: 90% 10%;
+    grid-template-columns: 70% 30%;
+}
+div.instructor-item p button{
+    display:inline !important;
 }

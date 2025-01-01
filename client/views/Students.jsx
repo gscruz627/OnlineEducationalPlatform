@@ -5,20 +5,20 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import CommonSideBar from '../components/CommonSideBar';
 
-const Instructors = () => {
+const Students = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searched, setSearched] = useState(false);
   const [searchCapture, setSearchCapture] = useState("");
-  const [instructors, setInstructors] = useState(null);
+  const [students, setStudents] = useState(null);
   
   const token = useSelector( (state) => state.token);
 
   useEffect( () => {
-    getAllInstructors();
+    getAllStudents();
   }, [])
 
-  const getAllInstructors = async () => {
-    const request = await fetch('https://localhost:7004/api/instructors', {
+  const getAllStudents = async () => {
+    const request = await fetch('https://localhost:7004/api/students', {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`
@@ -26,7 +26,7 @@ const Instructors = () => {
     });
     const response = await request.json();
     if(request.ok){
-      setInstructors(response);
+      setStudents(response);
     }
   }
 
@@ -38,7 +38,7 @@ const Instructors = () => {
     setSearched(true);
     setSearchCapture(searchTerm);
     
-    const request = await fetch(`https://localhost:7004/api/instructors/search?q=${searchTerm}`, {
+    const request = await fetch(`https://localhost:7004/api/students/search?q=${searchTerm}`, {
       method: "GET",
       headers: {
         "Authorization" : `Bearer ${token}`
@@ -46,7 +46,7 @@ const Instructors = () => {
     })
     const response = await request.json();
     if(request.ok){
-      setInstructors(response)
+      setStudents(response)
     }
   }
 
@@ -54,20 +54,20 @@ const Instructors = () => {
     setSearched(false);
     setSearchCapture(null);
     setSearchTerm("");
-    await getAllInstructors();
+    await getAllStudents();
   }
 
-  const editInstructor = async (i) => {
-    const newname = prompt("Change the name of this instructor", instructors[i].name);
-    if (instructors[i] && (newname == instructors[i].name)){
+  const editStudent = async (i) => {
+    const newname = prompt("Change the name of this student", students[i].name);
+    if (students[i] && (newname == students[i].name)){
       return;
     }
     if (newname == "" || newname == null){
       alert("Need a non-empty name")
       return;
     }
-    const instructorId = instructors[i].id;
-    const request = await fetch(`https://localhost:7004/api/instructors/${instructors[i].id}`, {
+    const studentId = students[i].id;
+    const request = await fetch(`https://localhost:7004/api/students/${students[i].id}`, {
       method: "PATCH",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -75,65 +75,66 @@ const Instructors = () => {
       },
       body: newname
     });
+
     const response = await request.json();
     if (request.ok){
-      setInstructors((prevInstructors) => 
-        prevInstructors.map((instructor) => {
-            if (instructor.id === instructorId) {
+      setStudents((prevStudents) => 
+        prevStudents.map((student) => {
+            if (student.id === studentId) {
                 return response;
             }
-            return instructor;
+            return student;
         })
     );
     }
   }
 
-  const deleteInstructor = async (id) => {
-    const finalConfirm = confirm("Are you sure you want to remove this instructor?");
+  const deleteStudent = async (id) => {
+    const finalConfirm = confirm("Are you sure you want to remove this student?");
     if (finalConfirm === false){
       return;
     }
-    const request = await fetch(`https://localhost:7004/api/instructors/${id}`, {
+    const request = await fetch(`https://localhost:7004/api/students/${id}`, {
       method: "DELETE",
       headers: {
         "Authorization" : `Bearer ${token}`
       }
     });
     if (request.ok) {
-      setInstructors((prevInstructors) => 
-          prevInstructors.filter((instructor) => instructor.id !== id)
+      setStudents((prevStudents) => 
+          prevStudents.filter((student) => student.id !== id)
       );
   }
   }
   return (
     <div className="context-menu">
       
-      <CommonSideBar choice="instructor"/>
+      <CommonSideBar choice="student"/>
       <div>
-        <h1>Manage Instructors</h1>
+        <h1>Manage Students</h1>
         <hr/>
-        <p>In this section you can manage instructors and perform actions such as searching, creating, and deleting instructors.
+        <p>In this section you can manage students and perform actions such as searching, creating, and deleting students.
           <br/>You can use the help menu that will display a sub-menu below it for help in navigating.
-          <br/>Use the search bar to begin searching or use the create an instructor form.
+          <br/>Use the search bar to begin searching or use the create a student form.
         </p>
 
         <form onSubmit={(e) => search(e)}>
-            <h1>Search Instructor</h1>
+            <h1>Search Student</h1>
             <hr/>
-            <p>Search an instructor by first and last name or email</p>
+            <p>Search a student by first and last name or email</p>
             <input placeholder="Ex. John Doe" className="generic-bar" type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
             <button className="blue-button" type="submit">Search</button>
         </form>
 
-        <h1>Instructors {searched ? `(Searched: ${searchCapture})` : "" }</h1>
+        <h1>Students {searched ? `(Searched: ${searchCapture})` : "" }</h1>
         {searchCapture && <span style={{color: "rgb(184, 65, 65)", cursor: "pointer"}} onClick={() => clearSearch()}>Clear Search</span>}
         <hr/>
 
-        {instructors && instructors[0] && instructors.map( (instructor, i) => (
+        {students && students[0] && students.map( (student, i) => (
           <div className="instructor-item" >
-            <p>- {instructor.name} ({instructor.email}) </p>
-            <p><button className="blue-button" onClick={() => editInstructor(i)}>&#128221; </button> &nbsp; 
-            <button className="red-button" onClick={() => deleteInstructor(instructor.id)}>×</button></p>
+            <p>- {student.name} ({student.email}) </p>
+            <p><button className="blue-button" onClick={() => editStudent(i)}>&#128221; </button> &nbsp; 
+            <button className="red-button" onClick={() => deleteStudent(student.id)}>×</button></p>
           </div>
         ))}
       </div>
@@ -142,4 +143,4 @@ const Instructors = () => {
   )
 }
 
-export default Instructors
+export default Students

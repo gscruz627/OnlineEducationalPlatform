@@ -4,12 +4,16 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;    
 using System.Text;
 using Microsoft.AspNetCore.Cors;
+using OnlineEducationaAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 var secretKey = builder.Configuration["jwt:secret_key"];
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers(mvcOptions =>
+{
+    mvcOptions.InputFormatters.Add(new TextSingleValueFormatter());
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -40,7 +44,6 @@ builder.Services.AddAuthentication(options =>
         OnAuthenticationFailed = context =>
         {
             Console.WriteLine($"Token failed: {context.Exception.Message}");
-            Console.WriteLine("aaaaaaa");
             return Task.CompletedTask;
         }
     };

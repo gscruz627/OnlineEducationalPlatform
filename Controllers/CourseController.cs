@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using OnlineEducationaAPI.Data;
 using OnlineEducationaAPI.Models.Entities;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace OnlineEducationaAPI.Controllers
 {
@@ -21,7 +22,7 @@ namespace OnlineEducationaAPI.Controllers
         [Route("{id:Guid}")]
         public IActionResult GetCourse(Guid id)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var adminCheck = dbcontext.Administrators.Find(userId);
             var instructorCheck = dbcontext.Instructors.Find(userId);
             if (adminCheck is null && instructorCheck is null)
@@ -40,7 +41,7 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize]
         public IActionResult GetAll()
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var adminCheck = dbcontext.Administrators.Find(userId);
             var instructorCheck = dbcontext.Instructors.Find(userId);
             if (adminCheck is null && instructorCheck is null)
@@ -55,9 +56,10 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize]
         public IActionResult AddNew(AddNewCourseDTO courseDTO)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var adminCheck = dbcontext.Administrators.Find(userId);
-             if (adminCheck is null)
+            if (adminCheck is null)
             {
                 return Unauthorized();
             }
@@ -65,6 +67,7 @@ namespace OnlineEducationaAPI.Controllers
             var courseCheck = dbcontext.Courses.FirstOrDefault( (course) => course.Title == courseDTO.Title);
             if (courseCheck is not null)
             {
+                Console.WriteLine("hello world");
                 return Unauthorized();
             }
             var courseEntity = new Course()
@@ -83,7 +86,7 @@ namespace OnlineEducationaAPI.Controllers
         [Route("{id:Guid}")]
         public IActionResult Edit(Guid id, [FromBody] AddNewCourseDTO courseDTO)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var adminCheck = dbcontext.Administrators.Find(userId);
             if (adminCheck is null)
             {
@@ -107,7 +110,7 @@ namespace OnlineEducationaAPI.Controllers
         [Route("{id:Guid}")]
         public IActionResult Remove(Guid id)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var adminCheck = dbcontext.Administrators.Find(userId);
             if (adminCheck is null)
             {

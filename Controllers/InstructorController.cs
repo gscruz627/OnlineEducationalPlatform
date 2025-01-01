@@ -48,20 +48,31 @@ namespace OnlineEducationaAPI.Controllers
         public IActionResult GetAll()
         {
             var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            Console.WriteLine("-------");
-            Console.WriteLine("Claims:");
-            Console.WriteLine(userId);
-            foreach (var claim in User.Claims)
-            {
-                Console.WriteLine($"{claim.Type}: {claim.Value}");
-            }
+            
             var adminCheck = dbcontext.Administrators.Find(userId);
             if (adminCheck is null)
             {
-                return Unauthorized(new { msg = $"aa {userId}" });
+                return Unauthorized();
             }
             var instructors = dbcontext.Instructors.ToList();
             return Ok(instructors);
+        }
+
+        [HttpGet]
+        [Authorize]
+        [Route("search")]
+        public IActionResult Search([FromQuery] string q)
+        {
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
+
+            var adminCheck = dbcontext.Administrators.Find(userId);
+            if (adminCheck is null)
+            {
+                return Unauthorized();
+            }
+            Console.WriteLine(q);
+            var results = dbcontext.Instructors.Where((instructor) => instructor.Name.Contains(q) || instructor.Email.Contains(q)).ToList();
+            return Ok(results);
         }
 
         [HttpPost]
@@ -70,9 +81,9 @@ namespace OnlineEducationaAPI.Controllers
         public IActionResult Register(AddInstructorDTO instructorDTO)
         {
             // Verify that a valid administrator is making a register action
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var adminFound = dbcontext.Administrators.Find(userId);
-            if (adminFound is not null)
+            if (adminFound is null)
             {
                 return Unauthorized();
             }
@@ -128,11 +139,13 @@ namespace OnlineEducationaAPI.Controllers
 
         [HttpPatch]
         [Authorize]
+        [Consumes("text/plain")]
         [Route("{id:Guid}")]
         public IActionResult PatchName(Guid id, [FromBody] string newname)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
-            var adminCheck = dbcontext.Instructors.Find(userId);
+
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
+            var adminCheck = dbcontext.Administrators.Find(userId);
             if (adminCheck is null)
             {
                 return Unauthorized();
@@ -152,7 +165,7 @@ namespace OnlineEducationaAPI.Controllers
         [Route("{id:Guid}")]
         public IActionResult DeleteInstructor(Guid id)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var adminCheck = dbcontext.Administrators.Find(userId);
             if (adminCheck is null)
             {
@@ -173,7 +186,7 @@ namespace OnlineEducationaAPI.Controllers
         [Route("sections/{id:Guid}")]
         public IActionResult SectionsByInstructor(Guid id)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var adminCheck = dbcontext.Administrators.Find(userId);
             if (adminCheck is null)
             {
