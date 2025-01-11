@@ -1,3 +1,6 @@
+div.context-menu p, div.context-menu label {
+    font-size: 22px;
+}
 div.image-holder{
     width:100%;
     margin:20px 0;
@@ -49,7 +52,7 @@ div.course-edit-form > div:nth-child(3){
     grid-column-end:3;
     
 }
-div.course-edit-form > div input[type=text]{
+div.course-edit-form > div input[type=text], div.course-edit-form > div input[type=number], div.course-edit-form select, .common-input{
     border: 2px solid rgb(186, 186, 186);
     background-color: #ededed;
     width:75%;
@@ -61,4 +64,44 @@ div.course-edit-form > div input[type=text]{
 div.course-edit-form button{
     width:50%;
     margin: auto auto;
+}
+div.new-section{
+    display:grid;
+    grid-template-columns: 30% 60% 10%;
+    font-size: 22px;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+}
+div.new-section input, div.new-section select{
+    width:50%;
+    height: 45px;
+    border-radius: 15px;
+    border: 2px solid slategray;
+    font-size:22px;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+}
+div.new-section input[type=number]{
+    width:100px !important;
+}
+
+button.green-add-button{
+    width:50px;
+    height:50px;
+    font-size:30px;
+    margin:0; padding:0;
+    background-color: green;
+    color: #FFF;
+    font-weight: bolder;
+    border-radius: 50%;
+    outline: none;
+    text-align:center;    
+}
+section.section-line{
+    display:grid;
+    grid-template-columns: 20% 50% 30%;
+    text-align: left;
+}
+section.section-line h3:hover{
+    color: rgb(18, 39, 75);
+    text-decoration:underline;
+    cursor:pointer;
 }

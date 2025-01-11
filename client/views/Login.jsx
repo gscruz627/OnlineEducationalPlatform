@@ -14,20 +14,58 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const executeLogin = (e) => {
+  const executeLogin = async (e) => {
     e.preventDefault();
     if (loginType === "admin"){
       if (username !== "" && password !== ""){
-        loginAdministrator();
+        await loginAdministrator();
+      }
+    }
+    if (loginType === "student"){
+      if (email !== "" && password !== ""){
+        await loginStudent();
+      }
+    }
+    if (loginType === "instructor"){
+      if (email !== "" && password !== ""){
+        await loginInstructor();
       }
     }
   }
-  const loginStudent = () => {
-
+  const loginStudent = async () => {
+      const request = await fetch("https://localhost:7004/api/students/login", {
+        method: "POST",
+        headers: {
+          "Content-Type" : "application/json"
+        },
+        body: JSON.stringify({
+          "email" : email,
+          "password" : password
+        })
+      })
+      const response = await request.json();
+      if (request.ok){
+        dispatch(setLogin({user:response.student, token: response.token, role: "student"}))
+        navigate("/");
+      }
   }
   
-  const loginInstructor = () => {
-
+  const loginInstructor = async () => {
+    const request = await fetch("https://localhost:7004/api/instructors/login", {
+      method: "POST",
+      headers: {
+        "Content-Type" : "application/json"
+      },
+      body: JSON.stringify({
+        "email" : email,
+        "password" : password
+      })
+    })
+    const response = await request.json();
+    if (request.ok){
+      dispatch(setLogin({user:response.instructor, token: response.token, role: "instructor"}))
+      navigate("/");
+    }
   }
 
   const loginAdministrator = async () => {

@@ -18,15 +18,24 @@ const Navbar = () => {
                 <li><Link to="/">Home</Link></li>
                 { (user && (role === "admin")) && (
                     <>
-                    <li>Manage Courses</li>
-                    <li><Link to="/instructors">Manage Instructors</Link></li>
-                    <li><Link to="/students">Manage Students</Link></li>
+                        <li><Link to="/courses">Manage Courses</Link></li>
+                        <li><Link to="/instructors">Manage Instructors</Link></li>
+                        <li><Link to="/students">Manage Students</Link></li>
                     </>
+                )}
+                { (user && (role === "student")) && (
+                    <>
+                        <li><Link to="/mycourses">My Courses</Link></li>
+                        <li><Link to="/course_enrollment">Enroll</Link></li>
+                    </>
+                )}
+                { (user && (role === "instructor")) && (
+                    <li><Link to="/mycourses_instructor">My Courses</Link></li>
                 )}
                 { user ? (
                     <>
-                    <li><Link to="/profile">{user.username}</Link></li>
-                    <li><a href="#" onClick={() => logout()}>SIGN OUT</a></li>
+                        <li><Link to="/profile">{user.username ? user.username : user.name}</Link></li>
+                        <li><a href="#" onClick={() => logout()}>SIGN OUT</a></li>
                     </>
                 ) : (
                     <li><Link to="/login">LOG IN</Link></li>

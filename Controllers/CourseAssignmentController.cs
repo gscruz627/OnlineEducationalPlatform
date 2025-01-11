@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using OnlineEducationaAPI.Data;
 using OnlineEducationaAPI.Models.Entities;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace OnlineEducationaAPI.Controllers
 {
     [ApiController]
-    [Route("assignments")]
+    [Route("api/assignments")]
     public class CourseAssignmentController : Controller
     {
         private readonly ApplicationDBContext dbcontext;
@@ -41,7 +42,7 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize]
         public IActionResult NewAssignment(AddAssignmentDTO assignmentDTO)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var instructorCheck = dbcontext.Instructors.Find(userId);
             if (instructorCheck is null)
             {
@@ -67,7 +68,7 @@ namespace OnlineEducationaAPI.Controllers
         [Route("{id:Guid}")]
         public IActionResult Edit(Guid id, [FromBody] AddAssignmentDTO assignmentDTO)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var instructorCheck = dbcontext.Instructors.Find(userId);
             if (instructorCheck is null)
             {
@@ -93,7 +94,7 @@ namespace OnlineEducationaAPI.Controllers
         [Route("{id:Guid}")]
         public IActionResult Delete(Guid id)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var instructorCheck = dbcontext.Instructors.Find(userId);
             if (instructorCheck is null)
             {
@@ -113,22 +114,37 @@ namespace OnlineEducationaAPI.Controllers
         [Route("submissions/{id:Guid}")]
         public IActionResult GetAllSubmissions(Guid id)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var instructorCheck = dbcontext.Instructors.Find(userId);
             if (instructorCheck is null)
             {
                 return Unauthorized();
             }
-            var submissions = dbcontext.Submissions.Where((submission) => submission.AssignmentID == id).ToList();
+            var submissions = dbcontext.Submissions
+            .Where(submission => submission.AssignmentID == id)
+            .Join(dbcontext.Students,
+                  submission => submission.StudentID,
+                  student => student.Id,
+                  (submission, student) => new
+                  {
+                      Id = submission.Id,
+                      studentId = student.Id,
+                      assignmentId = submission.Id,
+                      submissionFilename = submission.SubmissionFilename,
+                      comments = submission.Comments,
+                      studentName = student.Name
+                  })
+            .ToList();
+
             return Ok(submissions);
         }
 
         [HttpGet]
         [Authorize]
         [Route("submissions_student/")]
-        public IActionResult GetSubmissionsByStudent(StudentSubmissionDTO studentSubmissionDTO)
+        public IActionResult GetSubmissionsByStudent([FromQuery] Guid studentId, [FromQuery] Guid assignmentId)
         {
-            var submissions = dbcontext.Submissions.Where((submission) => submission.AssignmentID == studentSubmissionDTO.AssignmentID && submission.StudentID == studentSubmissionDTO.StudentID).ToList();
+            var submissions = dbcontext.Submissions.Where((submission) => submission.AssignmentID == assignmentId && submission.StudentID == studentId).ToList();
             return Ok(submissions);
         }
 

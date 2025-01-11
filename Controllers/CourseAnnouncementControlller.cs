@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using OnlineEducationaAPI.Data;
 using OnlineEducationaAPI.Models.Entities;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace OnlineEducationaAPI.Controllers
 {
@@ -44,7 +45,7 @@ namespace OnlineEducationaAPI.Controllers
         [Route("{id:Guid}")]
         public IActionResult Edit(Guid id, [FromBody] AddNewAnnouncementDTO announcementDTO)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var instructorCheck = dbcontext.Instructors.Find(userId);
             if (instructorCheck is null)
             {
@@ -66,10 +67,9 @@ namespace OnlineEducationaAPI.Controllers
 
         [HttpPost]
         [Authorize]
-        [Route("{id:Guid}")]
         public IActionResult NewAnnouncement(AddNewAnnouncementDTO announcementDTO)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var instructorCheck = dbcontext.Instructors.Find(userId);
             if (instructorCheck is null)
             {
@@ -91,7 +91,7 @@ namespace OnlineEducationaAPI.Controllers
         [Route("{id:Guid}")]
         public IActionResult Delete(Guid id)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
             var instructorCheck = dbcontext.Instructors.Find(userId);
             if (instructorCheck is null)
             {

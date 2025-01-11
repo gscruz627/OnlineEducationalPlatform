@@ -41,13 +41,6 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize]
         public IActionResult GetAll()
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            var instructorCheck = dbcontext.Instructors.Find(userId);
-            if (adminCheck is null && instructorCheck is null)
-            {
-                return Unauthorized();
-            }
             var courses = dbcontext.Courses.ToList();
             return Ok(courses);
         }

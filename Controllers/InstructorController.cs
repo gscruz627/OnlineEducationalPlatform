@@ -47,13 +47,6 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize]
         public IActionResult GetAll()
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             var instructors = dbcontext.Instructors.ToList();
             return Ok(instructors);
         }
@@ -134,7 +127,7 @@ namespace OnlineEducationaAPI.Controllers
 
             // We will return the jwt token and the client is responsible for decrypting
             // the token and getting the instructorID
-            return Ok(jwt_token);
+            return Ok(new { Instructor = new { Id = instructor.Id, Email = instructor.Email, Name = instructor.Name }, Token = jwt_token });
         }
 
         [HttpPatch]
@@ -187,7 +180,7 @@ namespace OnlineEducationaAPI.Controllers
         public IActionResult SectionsByInstructor(Guid id)
         {
             var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
+            var adminCheck = dbcontext.Instructors.Find(userId);
             if (adminCheck is null)
             {
                 return Unauthorized();
@@ -197,8 +190,22 @@ namespace OnlineEducationaAPI.Controllers
             {
                 return NotFound();
             }
-            var sections = dbcontext.Sections.Where((section) => section.InstructorID == id);
-            return Ok(sections);
+            var sections = dbcontext.Sections.Where((section) => section.InstructorID == id).ToList();
+            List<Object> returnSections = new List<Object>();
+            foreach(var section in sections)
+            {
+                var course = dbcontext.Courses.Find(section.CourseID);
+                returnSections.Add(new
+                {
+                   Id = section.Id,
+                   CourseId = section.CourseID,
+                   SectionCode = section.SectionCode,
+                   CourseCode = course.CourseCode,
+                   Image = course.ImageURL,
+                   Title = course.Title
+                });
+            }
+            return Ok(returnSections);
         }
     }
 }
