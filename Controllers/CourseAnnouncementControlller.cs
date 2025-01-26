@@ -9,17 +9,14 @@ namespace OnlineEducationaAPI.Controllers
 {
     [ApiController]
     [Route("api/announcements")]
-    public class CourseAnnouncementController : Controller
+    public class CourseAnnouncementController(ApplicationDBContext dbcontext) : Controller
     {
-        private readonly ApplicationDBContext dbcontext;
-
-        public CourseAnnouncementController(ApplicationDBContext dbcontext)
-        {
-            this.dbcontext = dbcontext;
-        }
+        private readonly ApplicationDBContext dbcontext = dbcontext;
 
         [HttpGet]
+        [Authorize]
         [Route("{id:Guid}")]
+        // GET api/announcements/0 -> Returns that one announcemennt
         public IActionResult GetAnnouncement(Guid id)
         {
             var announcement = dbcontext.CourseAnnouncements.Find(id);
@@ -33,6 +30,7 @@ namespace OnlineEducationaAPI.Controllers
         [HttpGet]
         [Authorize]
         [Route("section/{id:Guid}")]
+        // GET api/announcements/section/0 -> Returns announcements per section
         public IActionResult GetAnouncementsBySection(Guid id)
         {
             var announcements = dbcontext.CourseAnnouncements.Where((announcement) => announcement.SectionID == id).ToList();
@@ -41,16 +39,11 @@ namespace OnlineEducationaAPI.Controllers
 
 
         [HttpPatch]
-        [Authorize]
+        [Authorize(Policy = "Instructor")]
         [Route("{id:Guid}")]
+        // PATCH api/annnounncements/0 -> Edits this announcement
         public IActionResult Edit(Guid id, [FromBody] AddNewAnnouncementDTO announcementDTO)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var instructorCheck = dbcontext.Instructors.Find(userId);
-            if (instructorCheck is null)
-            {
-                return Unauthorized();
-            }
             var announcement = dbcontext.CourseAnnouncements.Find(id);
             if (announcement is null)
             {
@@ -61,20 +54,14 @@ namespace OnlineEducationaAPI.Controllers
             announcement.Description = announcementDTO.Description;
             dbcontext.SaveChanges();
             return Ok(announcement);
-            
         }
 
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Policy = "Instructor")]
+        // POST api/announcements -> Creates a new annnouncement.
         public IActionResult NewAnnouncement(AddNewAnnouncementDTO announcementDTO)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var instructorCheck = dbcontext.Instructors.Find(userId);
-            if (instructorCheck is null)
-            {
-                return Unauthorized();
-            }
             var announcement = new CourseAnnouncement()
             {
                 Title = announcementDTO.Title,
@@ -87,16 +74,11 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpDelete]
-        [Authorize]
+        [Authorize(Policy = "Instructor")]
         [Route("{id:Guid}")]
+        // DELETE api/announcements/0 -> Deletes an announcement.
         public IActionResult Delete(Guid id)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var instructorCheck = dbcontext.Instructors.Find(userId);
-            if (instructorCheck is null)
-            {
-                return Unauthorized();
-            }
             var announcement = dbcontext.CourseAnnouncements.Find(id);
             if (announcement is null)
             {

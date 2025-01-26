@@ -53,9 +53,9 @@ namespace OnlineEducationaAPI.Controllers
                 return Unauthorized();
             }
             var hasher = new PasswordHasher<Administrator>();
-            var verified = hasher.VerifyHashedPassword(null, admin.Password, adminDTO.Password);
+            var verification_result = hasher.VerifyHashedPassword(null, admin.Password, adminDTO.Password);
 
-            if(verified != PasswordVerificationResult.Success)
+            if(verification_result != PasswordVerificationResult.Success)
             {
                 return Unauthorized();
             }
@@ -63,7 +63,7 @@ namespace OnlineEducationaAPI.Controllers
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            var claims = new List<Claim>();
+            List<Claim> claims = [];
             claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
             claims.Add(new Claim(JwtRegisteredClaimNames.Sub, admin.Id.ToString()));
 
@@ -74,6 +74,7 @@ namespace OnlineEducationaAPI.Controllers
             );
             var jwt_token = new JwtSecurityTokenHandler().WriteToken(token);
             
+            // Return an object similar to the Administrator model but without the password, include the token.
             return Ok(new { Admin = new { Id = admin.Id, Username = admin.Username}, Token = jwt_token });
         }
 

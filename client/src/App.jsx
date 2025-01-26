@@ -1,10 +1,14 @@
-import { useState } from 'react'
+// React and RTK Imports
 import {BrowserRouter, Routes, Route} from "react-router-dom"
-import Home from '../views/Home'
-import Error from '../views/Error'
+import { useSelector } from "react-redux"
+
+// Import Views and components
 import './App.css'
 import Topbar from '../components/Topbar'
 import Navbar from '../components/Navbar'
+
+import Home from '../views/Home'
+import Error from '../views/Error'
 import Profile from '../views/Profile'
 import LoggedOut from '../views/LoggedOut'
 import Login from '../views/Login'
@@ -29,7 +33,7 @@ import StudentAssignment from '../views/StudentAssignment'
 
 const App = () => {
 
-  let isAuth = true;
+  let isAuth = useSelector( (state) => state.token);
   return (
     <>
       <BrowserRouter>
@@ -63,7 +67,7 @@ const App = () => {
               <Route path="*" element={ <Error/>} />
             </Routes>
           <hr style={{"width":"95%"}}/>
-          <p style={{"textAlign":"center"}}>Copyright 2024</p>
+          <p style={{"textAlign":"center"}}>Not Copyrighted</p>
           </div>
         </div>
       </BrowserRouter>

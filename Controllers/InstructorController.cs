@@ -12,74 +12,48 @@ namespace OnlineEducationaAPI.Controllers
 {
     [ApiController]
     [Route("api/instructors")]
-    public class InstructorController : Controller
+    public class InstructorController(ApplicationDBContext dbcontext, IConfiguration configuration) : Controller
     {
-        private readonly ILogger<InstructorController> _logger;
-        private readonly ApplicationDBContext dbcontext;
-        private readonly IConfiguration configuration;
-        public InstructorController(ApplicationDBContext dbcontext, IConfiguration configuration, ILogger<InstructorController> logger)
-        {
-            this.dbcontext = dbcontext;
-            this.configuration = configuration;
-            this._logger = logger;
-        }
+        private readonly ApplicationDBContext dbcontext = dbcontext;
+        private readonly IConfiguration configuration = configuration;
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Policy = "RequireAdmin")]
         [Route("{id:Guid}")]
+        // GET api/instructors/00000000-0000-0000-000000000000 -> Get instructor by Id
         public IActionResult Get(Guid id)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
-            var instructor = dbcontext.Instructors.Find(id);
-            if (instructor is null)
-            {
-                return NotFound();
-            }
-            return Ok(instructor);
+            var instructor = dbcontext.Instructors.Where((instructor) => instructor.Id == id
+                ).Select((instructor) => new { instructor.Id, instructor.Name, instructor.Email }).FirstOrDefault();
+            return (instructor is null) ? NotFound() : Ok(instructor);
         }
 
         [HttpGet]
         [Authorize]
+        // GET api/instructors -> Returns all instructors
         public IActionResult GetAll()
         {
-            var instructors = dbcontext.Instructors.ToList();
+            var instructors = dbcontext.Instructors.Select((instructor) => new { instructor.Id, instructor.Name, instructor.Email }).ToList();
             return Ok(instructors);
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Policy = "RequireAdmin")]
         [Route("search")]
+        // GET api/instructors/search?q=searchTerm -> Returns instructors similar to 'searchTerm'
         public IActionResult Search([FromQuery] string q)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
-            Console.WriteLine(q);
-            var results = dbcontext.Instructors.Where((instructor) => instructor.Name.Contains(q) || instructor.Email.Contains(q)).ToList();
+            var results = dbcontext.Instructors.Where((instructor) => instructor.Name.Contains(q) || instructor.Email.Contains(q)
+            ).Select((instructor) => new { instructor.Id, instructor.Name, instructor.Email }).ToList();
             return Ok(results);
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Policy = "RequireAdmin")]
         [Route("register")]
-        public IActionResult Register(AddInstructorDTO instructorDTO)
+        // POST api/instructors -> Creates a new instructor
+        public IActionResult Register(AddUserDTO instructorDTO)
         {
-            // Verify that a valid administrator is making a register action
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminFound = dbcontext.Administrators.Find(userId);
-            if (adminFound is null)
-            {
-                return Unauthorized();
-            }
             var hasher = new PasswordHasher<Instructor>();
             var instructor = new Instructor()
             {
@@ -89,29 +63,31 @@ namespace OnlineEducationaAPI.Controllers
             };
             dbcontext.Instructors.Add(instructor);
             dbcontext.SaveChanges();
-            return Ok("Successfully created Instructor");
+            return CreatedAtAction("Get", new { instructor.Id }, instructor);
         }
 
         [HttpPost]
         [Route("login")]
+        // POST api/instructors/login -> Returns an object with the instructor and the generated JWT
         public IActionResult Login(AuthenticateUserDTO instructorDTO)
         {
             var hasher = new PasswordHasher<Instructor>();
-           // Let us assume that emails are unique within an institution
+
+            // Let us assume that emails are unique within an institution
             var instructor = dbcontext.Instructors.FirstOrDefault((instructor) => instructor.Email == instructorDTO.Email);
             if (instructor is null)
             {
                 return Unauthorized();
             }
-            var verified = hasher.VerifyHashedPassword(null, instructor.Password, instructorDTO.Password);
-            if (verified != PasswordVerificationResult.Success)
+            var verification_result = hasher.VerifyHashedPassword(null, instructor.Password, instructorDTO.Password);
+            if (verification_result != PasswordVerificationResult.Success)
             {
                 return Unauthorized();
             }
 
             // At this point, the instructor is authorized and a JWT will be generated
-            var key = configuration["jwt:secret_key"];
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+            var SECRET_KEY = configuration["jwt:secret_key"];
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SECRET_KEY));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var claims = new List<Claim>();
             claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
@@ -127,22 +103,17 @@ namespace OnlineEducationaAPI.Controllers
 
             // We will return the jwt token and the client is responsible for decrypting
             // the token and getting the instructorID
-            return Ok(new { Instructor = new { Id = instructor.Id, Email = instructor.Email, Name = instructor.Name }, Token = jwt_token });
+            return Ok(new { Instructor = new { instructor.Id, instructor.Email, instructor.Name }, Token = jwt_token });
         }
 
         [HttpPatch]
-        [Authorize]
+        [Authorize(Policy = "RequireAdmin")]
         [Consumes("text/plain")]
         [Route("{id:Guid}")]
+        // PATCH api/instructors/00000000-0000-0000-000000000000 -> Returns the modified instructor
         public IActionResult PatchName(Guid id, [FromBody] string newname)
         {
 
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             var instructor = dbcontext.Instructors.Find(id);
             if (instructor is null)
             {
@@ -150,20 +121,15 @@ namespace OnlineEducationaAPI.Controllers
             }
             instructor.Name = newname;
             dbcontext.SaveChanges();
-            return Ok(instructor);
+            return Ok(new { instructor.Id, instructor.Name, instructor.Email });
         }
 
         [HttpDelete]
-        [Authorize]
+        [Authorize(Policy="RequireInstructor")]
         [Route("{id:Guid}")]
+        // DELETE api/instructors/00000000-0000-0000-000000000000 -> Deletetes the instructor.
         public IActionResult DeleteInstructor(Guid id)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             var instructor = dbcontext.Instructors.Find(id);
             if (instructor is null)
             {
@@ -175,16 +141,12 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Policy="RequireEither")]
         [Route("sections/{id:Guid}")]
+        // GET api/instructors/sections/00000000-0000-0000-000000000000 -> Returns the sections the instructor
+        // is teaching
         public IActionResult SectionsByInstructor(Guid id)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Instructors.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             var instructor = dbcontext.Instructors.Find(id);
             if(instructor is null)
             {
@@ -197,12 +159,12 @@ namespace OnlineEducationaAPI.Controllers
                 var course = dbcontext.Courses.Find(section.CourseID);
                 returnSections.Add(new
                 {
-                   Id = section.Id,
-                   CourseId = section.CourseID,
-                   SectionCode = section.SectionCode,
-                   CourseCode = course.CourseCode,
-                   Image = course.ImageURL,
-                   Title = course.Title
+                   section.Id,
+                   section.CourseID,
+                   section.SectionCode,
+                   course.CourseCode,
+                   course.ImageURL,
+                   course.Title
                 });
             }
             return Ok(returnSections);

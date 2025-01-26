@@ -24,35 +24,31 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = "RequireAdmin")]
         [Route("{id:Guid}")]
         public IActionResult GetStudent(Guid id)
         {
-            var student = dbcontext.Students.Find(id);
-            if (student is null)
-            {
-                return NotFound();
-            }
-            return Ok(student);
+            var student = dbcontext.Students.Where((student) => student.Id == id
+            ).Select((student) => new { student.Id, student.Name, student.Email }
+            ).FirstOrDefault();
+            
+            return (student is null) ? NotFound() : Ok(student);
         }
 
         [HttpGet]
+        [Authorize(Policy = "RequireAdmin")]
         [Authorize]
         public IActionResult GetAll()
         {
-            var students = dbcontext.Students.ToList();
+            var students = dbcontext.Students.Select((student) => new { student.Id, student.Name, student.Email }).ToList()
             return Ok(students);
         }
+
         [HttpPost]
-        [Authorize]
+        [Authorize (Policy = "Require Admin")]
         [Route("register")]
-        public IActionResult Register(AddStudentDTO studentDTO)
+        public IActionResult Register(AddUserDTO studentDTO)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             var studentCheck = dbcontext.Students.FirstOrDefault((student) => student.Email == studentDTO.Email);
             if (studentCheck is not null)
             {
@@ -68,7 +64,7 @@ namespace OnlineEducationaAPI.Controllers
             };
             dbcontext.Students.Add(student);
             dbcontext.SaveChanges();
-            return Ok(student);
+            return CreatedAtAction("Get", new { student.Id }, student);
         }
 
         [HttpPost]
@@ -91,7 +87,7 @@ namespace OnlineEducationaAPI.Controllers
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            var claims = new List<Claim>();
+            List<Claim> claims = [];
             claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
             claims.Add(new Claim(JwtRegisteredClaimNames.Sub, student.Id.ToString()));
 
@@ -101,20 +97,14 @@ namespace OnlineEducationaAPI.Controllers
                     signingCredentials: credentials
             );
             var jwt_token = new JwtSecurityTokenHandler().WriteToken(token);
-            return Ok(new { Student = new { Id = student.Id, Email = student.Email, Name = student.Name }, Token = jwt_token });
+            return Ok(new { Student = new { student.Id, student.Email, student.Name }, Token = jwt_token });
         }
 
         [HttpPatch]
-        [Authorize]
+        [Authorize (Policy = "RequireAdmin")]
         [Route("{id:Guid}")]
         public IActionResult PatchName(Guid id, [FromBody] string newname)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             var student = dbcontext.Students.Find(id);
             if (student is null)
             {
@@ -122,20 +112,14 @@ namespace OnlineEducationaAPI.Controllers
             }
             student.Name = newname;
             dbcontext.SaveChanges();
-            return Ok(student);
+            return Ok(new { student.Id, student.Name, student.Email});
         }
 
         [HttpDelete]
-        [Authorize]
+        [Authorize (Policy = "RequireAdmin")]
         [Route("{id:Guid}")]
         public IActionResult DeleteStudent(Guid id)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             var student = dbcontext.Students.Find(id);
             if (student is null)
             {

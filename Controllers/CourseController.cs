@@ -18,27 +18,16 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize (Policy = "RequireEither")]
         [Route("{id:Guid}")]
         public IActionResult GetCourse(Guid id)
-        {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            var instructorCheck = dbcontext.Instructors.Find(userId);
-            if (adminCheck is null && instructorCheck is null)
-            {
-                return Unauthorized();
-            }
+        { 
             var course = dbcontext.Courses.Find(id);
-            if (course is null)
-            {
-                return NotFound();
-            }
-            return Ok(course);
+            return (course is null) ? NotFound() : Ok(course);
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize (Policy = "RequireEither")]
         public IActionResult GetAll()
         {
             var courses = dbcontext.Courses.ToList();
@@ -46,45 +35,31 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize (Policy = "RequireAdmin")]
         public IActionResult AddNew(AddNewCourseDTO courseDTO)
         {
-
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             // Check if course under that name already exists
             var courseCheck = dbcontext.Courses.FirstOrDefault( (course) => course.Title == courseDTO.Title);
             if (courseCheck is not null)
             {
-                Console.WriteLine("hello world");
                 return Unauthorized();
             }
-            var courseEntity = new Course()
+            var course = new Course()
             {
                 Title = courseDTO.Title,
                 CourseCode = courseDTO.CourseCode,
                 ImageURL = courseDTO.ImageURL
             };
-            dbcontext.Courses.Add(courseEntity);
+            dbcontext.Courses.Add(course);
             dbcontext.SaveChanges();
-            return CreatedAtAction("GetCourse", new { id = courseEntity.Id }, courseEntity);
+            return CreatedAtAction("GetCourse", new { id = course.Id }, course);
         }
 
         [HttpPatch]
-        [Authorize]
+        [Authorize (Policy = "RequireAdmin")]
         [Route("{id:Guid}")]
         public IActionResult Edit(Guid id, [FromBody] AddNewCourseDTO courseDTO)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             var course = dbcontext.Courses.Find(id);
             if (course is null)
             {
@@ -99,16 +74,10 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpDelete]
-        [Authorize]
+        [Authorize(Policy = "RequireAdmin")]
         [Route("{id:Guid}")]
         public IActionResult Remove(Guid id)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             var course = dbcontext.Courses.Find(id);
 
             if (course is null)

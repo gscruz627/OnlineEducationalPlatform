@@ -9,16 +9,14 @@ namespace OnlineEducationaAPI.Controllers
 {
     [ApiController]
     [Route("api/assignments")]
-    public class CourseAssignmentController : Controller
+    public class CourseAssignmentController(ApplicationDBContext dbcontext) : Controller
     {
-        private readonly ApplicationDBContext dbcontext;
-        public CourseAssignmentController(ApplicationDBContext dbcontext)
-        {
-            this.dbcontext = dbcontext;
-        }
+        private readonly ApplicationDBContext dbcontext = dbcontext;
 
         [HttpGet]
+        [Authorize]
         [Route("{id:Guid}")]
+        // GET api/assignments/0 -> Returns one assignment
         public IActionResult GetAssignment(Guid id)
         {
             var assignment = dbcontext.CourseAsssignments.Find(id);
@@ -32,6 +30,7 @@ namespace OnlineEducationaAPI.Controllers
         [HttpGet]
         [Authorize]
         [Route("sections/{id:Guid}")]
+        // GET api/assignments/sections/0 -> Returns assignments for that section
         public IActionResult GetBySection(Guid id)
         {
             var assignments = dbcontext.CourseAsssignments.Where((assignment) => assignment.SectionID == id).ToList();
@@ -39,15 +38,10 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Policy = "Instructor")]
+        // POST api/assignments -> Creates an assignment
         public IActionResult NewAssignment(AddAssignmentDTO assignmentDTO)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var instructorCheck = dbcontext.Instructors.Find(userId);
-            if (instructorCheck is null)
-            {
-                return Unauthorized();
-            }
             var assignment = new CourseAsssignment()
             {
                 Description = assignmentDTO.Description,
@@ -64,16 +58,11 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpPatch]
-        [Authorize]
+        [Authorize(Policy = "Instructor")]
         [Route("{id:Guid}")]
+        // PATCH api/assignments/0 -> Modifies that assignment
         public IActionResult Edit(Guid id, [FromBody] AddAssignmentDTO assignmentDTO)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var instructorCheck = dbcontext.Instructors.Find(userId);
-            if (instructorCheck is null)
-            {
-                return Unauthorized();
-            }
             var assignment = dbcontext.CourseAsssignments.Find(id);
             if (assignment is null)
             {
@@ -86,20 +75,14 @@ namespace OnlineEducationaAPI.Controllers
             assignment.Name = assignmentDTO.Name;
             dbcontext.SaveChanges();
             return Ok(assignment);
-
         }
 
         [HttpDelete]
-        [Authorize]
+        [Authorize(Policy = "Instructor")]
         [Route("{id:Guid}")]
+        // DELETE api/assignments/0 -> Deletes that assignment
         public IActionResult Delete(Guid id)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var instructorCheck = dbcontext.Instructors.Find(userId);
-            if (instructorCheck is null)
-            {
-                return Unauthorized();
-            }
             var assignment = dbcontext.CourseAsssignments.Find(id);
             if (assignment is null)
             {
@@ -110,16 +93,11 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Policy = "Instructor")]
         [Route("submissions/{id:Guid}")]
+        // GET api/assignments/submissions/0 -> Returns all submissions and information for a section.
         public IActionResult GetAllSubmissions(Guid id)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var instructorCheck = dbcontext.Instructors.Find(userId);
-            if (instructorCheck is null)
-            {
-                return Unauthorized();
-            }
             var submissions = dbcontext.Submissions
             .Where(submission => submission.AssignmentID == id)
             .Join(dbcontext.Students,
@@ -127,7 +105,7 @@ namespace OnlineEducationaAPI.Controllers
                   student => student.Id,
                   (submission, student) => new
                   {
-                      Id = submission.Id,
+                      submissionId = submission.Id,
                       studentId = student.Id,
                       assignmentId = submission.Id,
                       submissionFilename = submission.SubmissionFilename,
@@ -142,6 +120,7 @@ namespace OnlineEducationaAPI.Controllers
         [HttpGet]
         [Authorize]
         [Route("submissions_student/")]
+        // GET api/assignments/submission_student -> Returns submissions per assignment per one student.
         public IActionResult GetSubmissionsByStudent([FromQuery] Guid studentId, [FromQuery] Guid assignmentId)
         {
             var submissions = dbcontext.Submissions.Where((submission) => submission.AssignmentID == assignmentId && submission.StudentID == studentId).ToList();
@@ -152,6 +131,7 @@ namespace OnlineEducationaAPI.Controllers
         [HttpPost]
         [Authorize]
         [Route("submit")]
+        // POST api/assignments/submission -> Creates a submission
         public IActionResult MakeSubmission(AddSubmissionDTO assignmentDTO)
         {
             var verifyLimit = dbcontext.Submissions.Where((submission) => submission.StudentID == assignmentDTO.StudentID && submission.AssignmentID == assignmentDTO.AssignmentID).ToList().Count;

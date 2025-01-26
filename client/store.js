@@ -20,7 +20,8 @@ export const authSlice = createSlice({
             state.token = null;
             state.role = null;
         },
-}});
+    }
+});
 
 export const { setLogin, setLogout } = authSlice.actions;
 export default authSlice.reducer;

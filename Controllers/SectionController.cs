@@ -9,14 +9,9 @@ namespace OnlineEducationaAPI.Controllers
 {
     [ApiController]
     [Route("api/sections")]
-    public class SectionController : Controller
+    public class SectionController(ApplicationDBContext _dbcontext) : Controller
     {
-        private readonly ApplicationDBContext dbcontext;
-
-        public SectionController(ApplicationDBContext dbcontext)
-        {
-            this.dbcontext = dbcontext;
-        }
+        private readonly ApplicationDBContext dbcontext = _dbcontext;
 
         [HttpGet]
         [Authorize]
@@ -46,30 +41,24 @@ namespace OnlineEducationaAPI.Controllers
             .Join(dbcontext.Students,
             enrollment => enrollment.StudentID,
             student => student.Id,
-            (enrollment, student) => student)
+            (enrollment, student) => new { student.Id, student.Name, student.Email})
             .ToList();
 
             return Ok(students);
         }
 
         [HttpPatch]
-        [Authorize]
+        [Authorize(Policy = "RequireAdmin")]
         [Route("{id:Guid}")]
         public IActionResult Edit(Guid id, [FromBody] AddNewSectionDTO sectionDTO)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             var section = dbcontext.Sections.Find(id);
             if (section is null)
             {
                 return NotFound();
             }
-            var sectionCheck = dbcontext.Sections.FirstOrDefault((section) => section.SectionCode == sectionDTO.SectionCode);
-            if ((sectionCheck is not null) && (sectionCheck.SectionCode != section.SectionCode))
+            var sectionCheck = dbcontext.Sections.FirstOrDefault((section) => section.CourseID == sectionDTO.CourseID && section.SectionCode == sectionDTO.SectionCode);
+            if (sectionCheck is not null)
             {
                 return BadRequest("Already one with that name!");
             }
@@ -81,16 +70,10 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Policy = "RequireAdmin")]
         public IActionResult NewSection(AddNewSectionDTO sectionDTO){
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             // Check if a section already exist for the code
-            var sectionCheck = dbcontext.Sections.FirstOrDefault((section) => section.SectionCode == sectionDTO.SectionCode);
+            var sectionCheck = dbcontext.Sections.FirstOrDefault((section) => section.SectionCode == sectionDTO.SectionCode && section.CourseID == sectionDTO.CourseID);
             if (sectionCheck is not null)
             {
                 return BadRequest("Already one with that name!");
@@ -130,28 +113,27 @@ namespace OnlineEducationaAPI.Controllers
                 return NotFound();
             }
             var enrollments = dbcontext.Enrollments.Where((enrollment) => enrollment.StudentID == student.Id).ToList();
-            List<Section> sections = new List<Section>();
+            List<Object> sections = [];
 
             foreach (var enrollment in enrollments)
             {
-                var section = dbcontext.Sections.Find(enrollment.SectionID);
+                var section = dbcontext.Sections
+            .Where(section => section.Id == enrollment.SectionID)
+            .Join(dbcontext.Courses,
+                  section => section.CourseID,
+                  course => course.Id,
+                  (section, course) => new
+                  {
+                      section.Id,
+                      CourseId = section.CourseID,
+                      section.SectionCode,
+                      course.CourseCode,
+                      Image = course.ImageURL,
+                      course.Title
+                  });
                 sections.Add(section);
             }
-            List<Object> returnSections = new List<Object>();
-            foreach (var section in sections)
-            {
-                var course = dbcontext.Courses.Find(section.CourseID);
-                returnSections.Add(new
-                {
-                    Id = section.Id,
-                    CourseId = section.CourseID,
-                    SectionCode = section.SectionCode,
-                    CourseCode = course.CourseCode,
-                    Image = course.ImageURL,
-                    Title = course.Title
-                });
-            }
-            return Ok(returnSections);
+            return Ok(sections);
         }
 
         [HttpPost]
@@ -159,54 +141,41 @@ namespace OnlineEducationaAPI.Controllers
         [Route("enroll")]
         public IActionResult EnrollStudent(AddEnrollmentDTO enrollmentDTO)
         {
-            var enrollment = new Enrollment()
-            {
-                SectionID = enrollmentDTO.SectionID,
-                StudentID = enrollmentDTO.StudentID,
-            };
             var check = dbcontext.Enrollments.FirstOrDefault((enrollment) => enrollment.StudentID == enrollmentDTO.StudentID && enrollment.SectionID == enrollmentDTO.SectionID);
             if (check is not null)
             {
                 return BadRequest("Already enrolled");
             }
+            var enrollment = new Enrollment()
+            {
+                SectionID = enrollmentDTO.SectionID,
+                StudentID = enrollmentDTO.StudentID,
+            };        
             dbcontext.Enrollments.Add(enrollment);
             dbcontext.SaveChanges();
             return CreatedAtAction("GetEnrollment", new { id = enrollment.Id }, enrollment);
         }
 
-        [HttpPatch]
-        [Authorize]
+        [HttpDelete]
+        [Authorize (Policy = "RequireEither")]
         [Route("expell")]
         public IActionResult ExpellStudent(ExpellDTO expellStudentDTO)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            var instructorCheck = dbcontext.Instructors.Find(userId);
-            if (adminCheck is null && instructorCheck is null)
-            {
-                return Unauthorized();
-            }
-            var valid = dbcontext.Enrollments.FirstOrDefault((enrollment) => enrollment.StudentID == expellStudentDTO.MemberID && enrollment.SectionID == expellStudentDTO.SectionID);
-            if(valid is null)
+            var enrollment = dbcontext.Enrollments.FirstOrDefault((enrollment) => enrollment.StudentID == expellStudentDTO.MemberID && enrollment.SectionID == expellStudentDTO.SectionID);
+            if(enrollment is null)
             {
                 return NotFound();
             }
-            dbcontext.Enrollments.Remove(valid);
+            dbcontext.Enrollments.Remove(enrollment);
             dbcontext.SaveChanges();
             return Ok("Student was expelled from such course section");
         }
 
         [HttpPatch]
-        [Authorize]
+        [Authorize (Policy = "RequireAdmin")]
         [Route("expell_instructor")]
         public IActionResult ExpellInstructor(ExpellDTO expellInstructorDTO)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             var section = dbcontext.Sections.Find(expellInstructorDTO.SectionID);
             if (section is null)
             {
@@ -218,16 +187,10 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpPatch]
-        [Authorize]
+        [Authorize (Policy = "RequireAdmin")]
         [Route("set_active/{id:Guid}")]
         public IActionResult SetActive(Guid id)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             var section = dbcontext.Sections.Find(id);
             if (section is null)
             {
@@ -239,16 +202,10 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpDelete]
-        [Authorize]
+        [Authorize(Policy = "RequireAdmin")]
         [Route("{id:Guid}")]
         public IActionResult Remove(Guid id)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-            var adminCheck = dbcontext.Administrators.Find(userId);
-            if (adminCheck is null)
-            {
-                return Unauthorized();
-            }
             var section = dbcontext.Sections.Find(id);
 
             if (section is null)
