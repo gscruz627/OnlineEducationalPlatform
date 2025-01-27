@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OnlineEducationaAPI.Data;
 using OnlineEducationaAPI.Models.Entities;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
 namespace OnlineEducationaAPI.Controllers
 {
@@ -16,33 +15,36 @@ namespace OnlineEducationaAPI.Controllers
         [HttpGet]
         [Authorize]
         [Route("{id:Guid}")]
-        public IActionResult GetSection(Guid id)
+        // GET api/sections/0 -> Get section by Id
+        public async Task<IActionResult> GetSection(Guid id)
         {
-            var section = dbcontext.Sections.Find(id);
+            var section = await dbcontext.Sections.FindAsync(id);
             return Ok(section);
         }
 
         [HttpGet]
         [Authorize]
         [Route("course/{id:Guid}")]
-        public IActionResult GetSectionsByCourse(Guid id)
+        // GET api/sections/course/0 -> Get all sections by a specific course's Id.
+        public async Task<IActionResult>GetSectionsByCourse(Guid id)
         {
-            var sections = dbcontext.Sections.Where((section) => section.CourseID == id).ToList();
+            var sections = await dbcontext.Sections.Where((section) => section.CourseID == id).ToListAsync();
             return Ok(sections);
         }
 
         [HttpGet]
         [Authorize]
-        [Route("students/{id:Guid}")]
-        public IActionResult GetStudentsbySection(Guid id)
+        [Route("{id:Guid}/students")]
+        public async Task<IActionResult> GetStudentsbySection(Guid id)
+        // GET api/sections/0/students -> Get all students per section (by Id)
         {
-            var students = dbcontext.Enrollments
+            var students = await dbcontext.Enrollments
             .Where(enrollment => enrollment.SectionID == id)
             .Join(dbcontext.Students,
             enrollment => enrollment.StudentID,
             student => student.Id,
             (enrollment, student) => new { student.Id, student.Name, student.Email})
-            .ToList();
+            .ToListAsync();
 
             return Ok(students);
         }
@@ -50,30 +52,32 @@ namespace OnlineEducationaAPI.Controllers
         [HttpPatch]
         [Authorize(Policy = "RequireAdmin")]
         [Route("{id:Guid}")]
-        public IActionResult Edit(Guid id, [FromBody] AddNewSectionDTO sectionDTO)
+        // PATCH api/sections/0 -> Edit a section by id and return it
+        public async Task<IActionResult> Edit(Guid id, [FromBody] AddNewSectionDTO sectionDTO)
         {
-            var section = dbcontext.Sections.Find(id);
+            var section = await dbcontext.Sections.FindAsync(id);
             if (section is null)
             {
                 return NotFound();
             }
-            var sectionCheck = dbcontext.Sections.FirstOrDefault((section) => section.CourseID == sectionDTO.CourseID && section.SectionCode == sectionDTO.SectionCode);
+            var sectionCheck = await dbcontext.Sections.FirstOrDefaultAsync((section) => section.CourseID == sectionDTO.CourseID && section.SectionCode == sectionDTO.SectionCode);
             if (sectionCheck is not null)
             {
-                return BadRequest("Already one with that name!");
+                return BadRequest("Already one with that name");
             }
             section.SectionCode = sectionDTO.SectionCode;
             section.InstructorID = sectionDTO.InstructorID;
             section.CourseID = sectionDTO.CourseID;
-            dbcontext.SaveChanges();
+            await dbcontext.SaveChangesAsync();
             return Ok(section);
         }
 
         [HttpPost]
         [Authorize(Policy = "RequireAdmin")]
-        public IActionResult NewSection(AddNewSectionDTO sectionDTO){
+        // POST api/sections -> Creates and returns a new section
+        public async Task<IActionResult> NewSection(AddNewSectionDTO sectionDTO){
             // Check if a section already exist for the code
-            var sectionCheck = dbcontext.Sections.FirstOrDefault((section) => section.SectionCode == sectionDTO.SectionCode && section.CourseID == sectionDTO.CourseID);
+            var sectionCheck = await dbcontext.Sections.FirstOrDefaultAsync((section) => section.SectionCode == sectionDTO.SectionCode && section.CourseID == sectionDTO.CourseID);
             if (sectionCheck is not null)
             {
                 return BadRequest("Already one with that name!");
@@ -85,17 +89,18 @@ namespace OnlineEducationaAPI.Controllers
                 InstructorID = sectionDTO.InstructorID,
                 IsActive = true
             };
-            dbcontext.Sections.Add(section);
-            dbcontext.SaveChanges();
+            await dbcontext.Sections.AddAsync(section);
+            await dbcontext.SaveChangesAsync();
             return CreatedAtAction("GetSection", new { id = section.Id }, section);
         }
 
         [HttpGet]
         [Authorize]
         [Route("enroll/{id:Guid}")]
-        public IActionResult GetEnrollment(Guid id)
+        // GET api/sections/enroll/0 -> Get enrollment by Id
+        public async Task<IActionResult> GetEnrollment(Guid id)
         {
-            var enrollment = dbcontext.Enrollments.Find(id);
+            var enrollment = await dbcontext.Enrollments.FindAsync(id);
             if (enrollment is null) {
                 return NotFound();
             }
@@ -105,19 +110,20 @@ namespace OnlineEducationaAPI.Controllers
         [HttpGet]
         [Authorize]
         [Route("enrollments/{id:Guid}")]
-        public IActionResult GetEnrollmentsPerStudent(Guid id)
+        // GET api/sections/enrollments/0 -> Get enrollments (section information) per student
+        public async Task<IActionResult> GetEnrollmentsPerStudent(Guid id)
         {
-            var student = dbcontext.Students.Find(id);
+            var student = await dbcontext.Students.FindAsync(id);
             if (student is null)
             {
                 return NotFound();
             }
-            var enrollments = dbcontext.Enrollments.Where((enrollment) => enrollment.StudentID == student.Id).ToList();
+            var enrollments = await dbcontext.Enrollments.Where((enrollment) => enrollment.StudentID == student.Id).ToListAsync();
             List<Object> sections = [];
 
             foreach (var enrollment in enrollments)
             {
-                var section = dbcontext.Sections
+                var section = await dbcontext.Sections
             .Where(section => section.Id == enrollment.SectionID)
             .Join(dbcontext.Courses,
                   section => section.CourseID,
@@ -130,7 +136,7 @@ namespace OnlineEducationaAPI.Controllers
                       course.CourseCode,
                       Image = course.ImageURL,
                       course.Title
-                  });
+                  }).FirstOrDefaultAsync();
                 sections.Add(section);
             }
             return Ok(sections);
@@ -139,9 +145,10 @@ namespace OnlineEducationaAPI.Controllers
         [HttpPost]
         [Authorize]
         [Route("enroll")]
-        public IActionResult EnrollStudent(AddEnrollmentDTO enrollmentDTO)
+        // POST api/sections/enroll -> Enrolle a student into a section
+        public async Task<IActionResult> EnrollStudent(AddEnrollmentDTO enrollmentDTO)
         {
-            var check = dbcontext.Enrollments.FirstOrDefault((enrollment) => enrollment.StudentID == enrollmentDTO.StudentID && enrollment.SectionID == enrollmentDTO.SectionID);
+            var check = await dbcontext.Enrollments.FirstOrDefaultAsync((enrollment) => enrollment.StudentID == enrollmentDTO.StudentID && enrollment.SectionID == enrollmentDTO.SectionID);
             if (check is not null)
             {
                 return BadRequest("Already enrolled");
@@ -151,69 +158,73 @@ namespace OnlineEducationaAPI.Controllers
                 SectionID = enrollmentDTO.SectionID,
                 StudentID = enrollmentDTO.StudentID,
             };        
-            dbcontext.Enrollments.Add(enrollment);
-            dbcontext.SaveChanges();
+            await dbcontext.Enrollments.AddAsync(enrollment);
+            await dbcontext.SaveChangesAsync();
             return CreatedAtAction("GetEnrollment", new { id = enrollment.Id }, enrollment);
         }
 
         [HttpDelete]
         [Authorize (Policy = "RequireEither")]
         [Route("expell")]
-        public IActionResult ExpellStudent(ExpellDTO expellStudentDTO)
+        // DELETE api/sections/expell -> Expell a student from a section.
+        public async Task<IActionResult> ExpellStudent(ExpellDTO expellStudentDTO)
         {
-            var enrollment = dbcontext.Enrollments.FirstOrDefault((enrollment) => enrollment.StudentID == expellStudentDTO.MemberID && enrollment.SectionID == expellStudentDTO.SectionID);
+            var enrollment = await dbcontext.Enrollments.FirstOrDefaultAsync((enrollment) => enrollment.StudentID == expellStudentDTO.MemberID && enrollment.SectionID == expellStudentDTO.SectionID);
             if(enrollment is null)
             {
                 return NotFound();
             }
             dbcontext.Enrollments.Remove(enrollment);
-            dbcontext.SaveChanges();
+            await dbcontext.SaveChangesAsync();
             return Ok("Student was expelled from such course section");
         }
 
-        [HttpPatch]
+        [HttpDelete]
         [Authorize (Policy = "RequireAdmin")]
         [Route("expell_instructor")]
-        public IActionResult ExpellInstructor(ExpellDTO expellInstructorDTO)
+        // DELETE api/sections/expell_instructor -> Expell an instructor for a section and add replacement.
+        public async Task<IActionResult> ExpellInstructor(ExpellDTO expellInstructorDTO)
         {
-            var section = dbcontext.Sections.Find(expellInstructorDTO.SectionID);
+            var section = await dbcontext.Sections.FindAsync(expellInstructorDTO.SectionID);
             if (section is null)
             {
                 return NotFound();
             }
             section.InstructorID = expellInstructorDTO.MemberID;
-            dbcontext.SaveChanges();
+            await dbcontext.SaveChangesAsync();
             return Ok(section);
         }
 
         [HttpPatch]
         [Authorize (Policy = "RequireAdmin")]
-        [Route("set_active/{id:Guid}")]
-        public IActionResult SetActive(Guid id)
+        [Route("{id:Guid}/set_active")]
+        // PATCH api/sections/0/set_active -> Set a section as active or inactive and return it.
+        public async Task<IActionResult> SetActive(Guid id)
         {
-            var section = dbcontext.Sections.Find(id);
+            var section = await dbcontext.Sections.FindAsync(id);
             if (section is null)
             {
                 return NotFound();
             }
             section.IsActive = !section.IsActive;
-            dbcontext.SaveChanges();
+            await dbcontext.SaveChangesAsync();
             return Ok(section);
         }
 
         [HttpDelete]
         [Authorize(Policy = "RequireAdmin")]
         [Route("{id:Guid}")]
-        public IActionResult Remove(Guid id)
+        // DELETE api/sections -> Remove a section by Id.
+        public async Task<IActionResult> Remove(Guid id)
         {
-            var section = dbcontext.Sections.Find(id);
+            var section = await dbcontext.Sections.FindAsync(id);
 
             if (section is null)
             {
                 return NotFound();
             }
             dbcontext.Sections.Remove(section);
-            dbcontext.SaveChanges();
+            await dbcontext.SaveChangesAsync();
             return Ok("Section was Removed");
 
         }

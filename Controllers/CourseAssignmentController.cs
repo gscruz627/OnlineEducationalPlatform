@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OnlineEducationaAPI.Data;
 using OnlineEducationaAPI.Models.Entities;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
 namespace OnlineEducationaAPI.Controllers
 {
@@ -17,9 +16,9 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize]
         [Route("{id:Guid}")]
         // GET api/assignments/0 -> Returns one assignment
-        public IActionResult GetAssignment(Guid id)
+        public async Task<IActionResult> GetAssignment(Guid id)
         {
-            var assignment = dbcontext.CourseAsssignments.Find(id);
+            var assignment = await dbcontext.CourseAsssignments.FindAsync(id);
             if (assignment is null)
             {
                 return NotFound();
@@ -31,16 +30,16 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize]
         [Route("sections/{id:Guid}")]
         // GET api/assignments/sections/0 -> Returns assignments for that section
-        public IActionResult GetBySection(Guid id)
+        public async Task<IActionResult> GetBySection(Guid id)
         {
-            var assignments = dbcontext.CourseAsssignments.Where((assignment) => assignment.SectionID == id).ToList();
+            var assignments = await dbcontext.CourseAsssignments.Where((assignment) => assignment.SectionID == id).ToListAsync();
             return Ok(assignments);
         }
 
         [HttpPost]
         [Authorize(Policy = "Instructor")]
         // POST api/assignments -> Creates an assignment
-        public IActionResult NewAssignment(AddAssignmentDTO assignmentDTO)
+        public async Task<IActionResult> NewAssignment(AddAssignmentDTO assignmentDTO)
         {
             var assignment = new CourseAsssignment()
             {
@@ -52,8 +51,8 @@ namespace OnlineEducationaAPI.Controllers
                 SubmissionLimit = assignmentDTO.SubmissionLimit,
                 RequiresFileSubmission = assignmentDTO.RequiresFileSubmission
             };
-            dbcontext.CourseAsssignments.Add(assignment);
-            dbcontext.SaveChanges();
+            await dbcontext.CourseAsssignments.FindAsync(assignment);
+            await dbcontext.SaveChangesAsync();
             return CreatedAtAction("GetAssignment", new { id = assignment.Id }, assignment);
         }
 
@@ -61,9 +60,9 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize(Policy = "Instructor")]
         [Route("{id:Guid}")]
         // PATCH api/assignments/0 -> Modifies that assignment
-        public IActionResult Edit(Guid id, [FromBody] AddAssignmentDTO assignmentDTO)
+        public async Task<IActionResult> Edit(Guid id, [FromBody] AddAssignmentDTO assignmentDTO)
         {
-            var assignment = dbcontext.CourseAsssignments.Find(id);
+            var assignment = await dbcontext.CourseAsssignments.FindAsync(id);
             if (assignment is null)
             {
                 return NotFound();
@@ -73,7 +72,7 @@ namespace OnlineEducationaAPI.Controllers
             assignment.DueDate = assignmentDTO.DueDate;
             assignment.Description = assignmentDTO.Description;
             assignment.Name = assignmentDTO.Name;
-            dbcontext.SaveChanges();
+            await dbcontext.SaveChangesAsync();
             return Ok(assignment);
         }
 
@@ -81,14 +80,14 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize(Policy = "Instructor")]
         [Route("{id:Guid}")]
         // DELETE api/assignments/0 -> Deletes that assignment
-        public IActionResult Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var assignment = dbcontext.CourseAsssignments.Find(id);
+            var assignment = await dbcontext.CourseAsssignments.FindAsync(id);
             if (assignment is null)
             {
                 return NotFound();
             }
-            dbcontext.CourseAsssignments.Remove(assignment);
+            await dbcontext.CourseAsssignments.FindAsync(assignment);
             return Ok("Assignment was removed");
         }
 
@@ -96,9 +95,9 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize(Policy = "Instructor")]
         [Route("submissions/{id:Guid}")]
         // GET api/assignments/submissions/0 -> Returns all submissions and information for a section.
-        public IActionResult GetAllSubmissions(Guid id)
+        public async Task<IActionResult> GetAllSubmissions(Guid id)
         {
-            var submissions = dbcontext.Submissions
+            var submissions = await dbcontext.Submissions
             .Where(submission => submission.AssignmentID == id)
             .Join(dbcontext.Students,
                   submission => submission.StudentID,
@@ -112,7 +111,7 @@ namespace OnlineEducationaAPI.Controllers
                       comments = submission.Comments,
                       studentName = student.Name
                   })
-            .ToList();
+            .ToListAsync();
 
             return Ok(submissions);
         }
@@ -121,9 +120,9 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize]
         [Route("submissions_student/")]
         // GET api/assignments/submission_student -> Returns submissions per assignment per one student.
-        public IActionResult GetSubmissionsByStudent([FromQuery] Guid studentId, [FromQuery] Guid assignmentId)
+        public async Task<IActionResult> GetSubmissionsByStudent([FromQuery] Guid studentId, [FromQuery] Guid assignmentId)
         {
-            var submissions = dbcontext.Submissions.Where((submission) => submission.AssignmentID == assignmentId && submission.StudentID == studentId).ToList();
+            var submissions = await dbcontext.Submissions.Where((submission) => submission.AssignmentID == assignmentId && submission.StudentID == studentId).ToListAsync();
             return Ok(submissions);
         }
 
@@ -132,10 +131,11 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize]
         [Route("submit")]
         // POST api/assignments/submission -> Creates a submission
-        public IActionResult MakeSubmission(AddSubmissionDTO assignmentDTO)
+        public async Task<IActionResult> MakeSubmission(AddSubmissionDTO assignmentDTO)
         {
-            var verifyLimit = dbcontext.Submissions.Where((submission) => submission.StudentID == assignmentDTO.StudentID && submission.AssignmentID == assignmentDTO.AssignmentID).ToList().Count;
-            var assignment = dbcontext.CourseAsssignments.Find(assignmentDTO.AssignmentID);
+            var verifyLimitGroup = await dbcontext.Submissions.Where((submission) => submission.StudentID == assignmentDTO.StudentID && submission.AssignmentID == assignmentDTO.AssignmentID).ToListAsync();
+            var verifyLimit = verifyLimitGroup.Count;
+            var assignment = await dbcontext.CourseAsssignments.FindAsync(assignmentDTO.AssignmentID);
             if (assignment is null)
             {
                 return NotFound();
@@ -165,8 +165,8 @@ namespace OnlineEducationaAPI.Controllers
                     submission.SubmissionFilename = assignmentDTO.SubmissionFilename;
                 }
             }
-            dbcontext.Submissions.Add(submission);
-            dbcontext.SaveChanges();
+            await dbcontext.Submissions.AddAsync(submission);
+            await dbcontext.SaveChangesAsync();
             return Ok(submission);
         }
     }

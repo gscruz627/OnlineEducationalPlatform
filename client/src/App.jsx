@@ -1,5 +1,5 @@
 // React and RTK Imports
-import {BrowserRouter, Routes, Route} from "react-router-dom"
+import {BrowserRouter, Routes, Route, Navigate} from "react-router-dom"
 import { useSelector } from "react-redux"
 
 // Import Views and components
@@ -33,7 +33,8 @@ import StudentAssignment from '../views/StudentAssignment'
 
 const App = () => {
 
-  let isAuth = useSelector( (state) => state.token);
+  const isAuth = useSelector( (state) => state.token);
+  const role = useSelector( (state) => state.role);
   return (
     <>
       <BrowserRouter>
@@ -42,32 +43,33 @@ const App = () => {
           <div className='main-content'>
             <Navbar/>
             <Routes>
+              
               <Route path="/" element={ <Home/> } />
-              <Route path="/profile" element={ <Profile/>} />
-              <Route path="/signout" elment={ <LoggedOut/>} />
               <Route path="/login" element={ <Login />} />
-              <Route path="/instructors" element={ <Instructors/>}/>
-              <Route path="/createinstructor" element={ <CreateInstructor/>} />
-              <Route path="/students" element={ <Students/>} />
-              <Route path="/createstudent" element={ <CreateStudent/>} />
-              <Route path="/courses" element={ <Courses/>} />
-              <Route path="/createcourse" element={ <CreateCourse/>} />
-              <Route path="/course/:courseId" element={<Course/>} />
-              <Route path="/section/:sectionId" element={<Section/>} />
-              <Route path="/course_enrollment" element={ <CourseEnrollment/>} />
-              <Route path="/mycourses_instructor" element={ <MyCoursesInstructor/>} />
-              <Route path="/course_view/instructor/:sectionId" element={ <CourseViewInstructor/>} />
-              <Route path="/course_view/instructor/assignments/:sectionId" element={ <CourseAssignmentsInstructor/>} />
-              <Route path="/assignment/:assignmentId" element={<Assignment/>} />
-              <Route path="/course_view/instructor/student_list/:sectionId" element={ <StudentList/>} />
-              <Route path="/mycourses" element={ <MyCourses/> } />
-              <Route path="/course_view/student/:sectionId" element={ <CourseViewStudent/>} />
-              <Route path="/course_view/student/assignments/:sectionId" element={ <CourseAssignmentsStudent/> } />
-              <Route path="/assignment/student/:assignmentId" element={ <StudentAssignment/>} />
+              <Route path="/signout" element={ <LoggedOut/>} />
+              <Route path="/profile/:userId" element={ isAuth ? <Profile/> : <Navigate to="/login"/>} />
+
+              <Route path="/members/:kind" element={ isAuth && (role === "admin" ) ? <Members/> : <Navigate to="/404"/>} />
+              <Route path="/create_member/:kind" element={ isAuth && (role === "admin") ? <CreateMember/> : <Navigate to="/404"/> } />
+              <Route path="/admin_courses" element={ isAuth && (role === "admin") ? <AdminCourses/> : <Navigate to="/404"/>} />
+              <Route path="/admin_individual_course/:courseId" element={isAuth && (role === "admin") ? <AdminCourse/> : <Navigate to="/404"/>} />
+              <Route path="/admin_individual_section/:sectionId" element={isAuth && (role === "admin") ? <AdminSection/> : <Navigate to="/404"/>} />          
+
+              <Route path="/my_courses/:kind" element={ isAuth ? <MyCourses/> : <Navigate to="/404"/>} />
+              <Route path="/course_enrollment" element={ isAuth ? <CourseEnrollment/> : <Navigate to="/404"/>} />
+              
               <Route path="*" element={ <Error/>} />
+
+            </Routes>
+            
+            <Routes path="/course_page/:sectionId">
+              <Route path="/"  element={ isAuth ? <CoursePage/> : <Navigate to="/404"/> } />
+              <Route path="/assignments" element={ isAuth ? <CourseAssignment/> : <Navigate to="/404"/>} />
+              <Route path="/assignments/:assignmentId" element={ isAuth ? <Assignment/> : <Navigate to="/404"/>} />
+              <Route path="/students" element={ isAuth ? <StudentList/> : <Navigate to="/404"/>} />
             </Routes>
           <hr style={{"width":"95%"}}/>
-          <p style={{"textAlign":"center"}}>Not Copyrighted</p>
+          <p style={{"textAlign":"center"}}>By Gustavo La Cruz 2024/2025</p>
           </div>
         </div>
       </BrowserRouter>

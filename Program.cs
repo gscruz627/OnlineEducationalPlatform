@@ -94,6 +94,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
     app.UseDeveloperExceptionPage();
+} else
+{
+    app.UseExceptionHandler("/error_endpoint");
 }
 
 app.UseHttpsRedirection();

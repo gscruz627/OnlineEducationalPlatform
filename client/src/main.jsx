@@ -10,7 +10,8 @@ import { Provider } from "react-redux";
 import storage from "redux-persist/lib/storage";
 import { persistStore, persistReducer, FLUSH,
          REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist"
-         
+        
+// Configure RTK
 const persistConfig = { key: "root", storage, version: 1 };
 const persistedReducer = persistReducer(persistConfig, mainReducer);
 const store = configureStore( {
@@ -24,6 +25,7 @@ const store = configureStore( {
   )
 })
 
+// Create the Virtual DOM
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Provider store={store}>

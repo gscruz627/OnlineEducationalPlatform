@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OnlineEducationaAPI.Data;
 using OnlineEducationaAPI.Models.Entities;
@@ -11,22 +12,18 @@ namespace OnlineEducationaAPI.Controllers
 {
     [ApiController]
     [Route("api/authority")]
-    public class AdministratorController : Controller
+    public class AdministratorController(ApplicationDBContext dbcontext, IConfiguration configuration) : Controller
     {
-        private readonly ApplicationDBContext dbcontext;
-        private readonly IConfiguration configuration;
-
-        public AdministratorController(ApplicationDBContext dbcontext, IConfiguration configuration)
-        {
-            this.dbcontext = dbcontext;
-            this.configuration = configuration;
-        }
+        private readonly ApplicationDBContext dbcontext = dbcontext;
+        private readonly IConfiguration configuration = configuration;
 
         [HttpPost]
         [Route("register")]
-        public IActionResult Register(AdministratorDTO adminDTO)
+        // GET api/authority/register -> Register a new administration.
+        public async Task<IActionResult> Register(AdministratorDTO adminDTO)
         {
-            var checkAdmin = dbcontext.Administrators.FirstOrDefault((admin) => admin.Username == adminDTO.Username);
+
+            var checkAdmin = await dbcontext.Administrators.FirstOrDefaultAsync((admin) => admin.Username == adminDTO.Username);
             if (checkAdmin is not null)
             {
                 return Unauthorized();
@@ -38,16 +35,17 @@ namespace OnlineEducationaAPI.Controllers
                 Username = adminDTO.Username,
                 Password = hasher.HashPassword(null, adminDTO.Password)
             };
-            dbcontext.Administrators.Add(admin);
-            dbcontext.SaveChanges();
+            await dbcontext.Administrators.AddAsync(admin);
+            await dbcontext.SaveChangesAsync();
             return Ok("Administrator was created");
         }
 
         [HttpPost]
         [Route("login")]
-        public IActionResult Login(AdministratorDTO adminDTO)
+        // POST api/authority/login -> Returns user's information and a jwt upon successful login.
+        public async Task<IActionResult> Login(AdministratorDTO adminDTO)
         {
-            var admin = dbcontext.Administrators.FirstOrDefault((admin) => admin.Username == adminDTO.Username);
+            var admin = await dbcontext.Administrators.FirstOrDefaultAsync((admin) => admin.Username == adminDTO.Username);
             if (admin is null)
             {
                 return Unauthorized();
@@ -75,7 +73,7 @@ namespace OnlineEducationaAPI.Controllers
             var jwt_token = new JwtSecurityTokenHandler().WriteToken(token);
             
             // Return an object similar to the Administrator model but without the password, include the token.
-            return Ok(new { Admin = new { Id = admin.Id, Username = admin.Username}, Token = jwt_token });
+            return Ok(new { Admin = new { admin.Id, admin.Username}, Token = jwt_token });
         }
 
     }

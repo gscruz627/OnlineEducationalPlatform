@@ -7,30 +7,26 @@ using System.Security.Claims;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace OnlineEducationaAPI.Controllers
 {
     [ApiController]
     [Route("api/students")]
-    public class StudentController : Controller
+    public class StudentController(ApplicationDBContext dbcontext, IConfiguration configuration) : Controller
     {
-        private readonly ApplicationDBContext dbcontext;
-        private readonly IConfiguration configuration;
-
-        public StudentController(ApplicationDBContext dbcontext, IConfiguration configuration)
-        {
-            this.dbcontext = dbcontext;
-            this.configuration = configuration;
-        }
+        private readonly ApplicationDBContext dbcontext = dbcontext;
+        private readonly IConfiguration configuration = configuration;
 
         [HttpGet]
         [Authorize(Policy = "RequireAdmin")]
         [Route("{id:Guid}")]
-        public IActionResult GetStudent(Guid id)
+        // GET api/students/0 -> Return student by Id.
+        public async Task<IActionResult> GetStudent(Guid id)
         {
-            var student = dbcontext.Students.Where((student) => student.Id == id
+            var student = await dbcontext.Students.Where((student) => student.Id == id
             ).Select((student) => new { student.Id, student.Name, student.Email }
-            ).FirstOrDefault();
+            ).FirstOrDefaultAsync();
             
             return (student is null) ? NotFound() : Ok(student);
         }
@@ -38,18 +34,20 @@ namespace OnlineEducationaAPI.Controllers
         [HttpGet]
         [Authorize(Policy = "RequireAdmin")]
         [Authorize]
-        public IActionResult GetAll()
+        // GET api/students -> Get all students
+        public async Task<IActionResult> GetAll()
         {
-            var students = dbcontext.Students.Select((student) => new { student.Id, student.Name, student.Email }).ToList()
+            var students = await dbcontext.Students.Select((student) => new { student.Id, student.Name, student.Email }).ToListAsync();
             return Ok(students);
         }
 
         [HttpPost]
         [Authorize (Policy = "Require Admin")]
         [Route("register")]
-        public IActionResult Register(AddUserDTO studentDTO)
+        // POST api/students -> Register a new student
+        public async Task<IActionResult> Register(AddUserDTO studentDTO)
         {
-            var studentCheck = dbcontext.Students.FirstOrDefault((student) => student.Email == studentDTO.Email);
+            var studentCheck = await dbcontext.Students.FirstOrDefaultAsync((student) => student.Email == studentDTO.Email);
             if (studentCheck is not null)
             {
                 return BadRequest("User by that name already exists!");
@@ -62,16 +60,17 @@ namespace OnlineEducationaAPI.Controllers
                 Name = studentDTO.Name,
                 Password = hasher.HashPassword(null, studentDTO.Password)
             };
-            dbcontext.Students.Add(student);
-            dbcontext.SaveChanges();
+            await dbcontext.Students.AddAsync(student);
+            await dbcontext.SaveChangesAsync();
             return CreatedAtAction("Get", new { student.Id }, student);
         }
 
         [HttpPost]
         [Route("login")]
-        public IActionResult Login(AuthenticateUserDTO studentDTO)
+        // POST api/students/login -> Authenticate a user and return information and token.
+        public async Task<IActionResult> Login(AuthenticateUserDTO studentDTO)
         {
-            var student = dbcontext.Students.FirstOrDefault((student) => student.Email == studentDTO.Email);
+            var student = await dbcontext.Students.FirstOrDefaultAsync((student) => student.Email == studentDTO.Email);
             if (student is null)
             {
                 return Unauthorized();
@@ -103,30 +102,32 @@ namespace OnlineEducationaAPI.Controllers
         [HttpPatch]
         [Authorize (Policy = "RequireAdmin")]
         [Route("{id:Guid}")]
-        public IActionResult PatchName(Guid id, [FromBody] string newname)
+        // PATCH api/students/0 -> Edits the name of a student by Id.
+        public async Task<IActionResult> PatchName(Guid id, [FromBody] string newname)
         {
-            var student = dbcontext.Students.Find(id);
+            var student = await dbcontext.Students.FindAsync(id);
             if (student is null)
             {
                 return NotFound();
             }
             student.Name = newname;
-            dbcontext.SaveChanges();
+            await dbcontext.SaveChangesAsync();
             return Ok(new { student.Id, student.Name, student.Email});
         }
 
         [HttpDelete]
         [Authorize (Policy = "RequireAdmin")]
         [Route("{id:Guid}")]
-        public IActionResult DeleteStudent(Guid id)
+        // DELETE api/students/0 -> Deletes a student by Id.
+        public async Task<IActionResult> DeleteStudent(Guid id)
         {
-            var student = dbcontext.Students.Find(id);
+            var student = await dbcontext.Students.FindAsync(id);
             if (student is null)
             {
                 return NotFound();
             }
             dbcontext.Students.Remove(student);
-            dbcontext.SaveChanges();
+            await dbcontext.SaveChangesAsync();
             return Ok("Student was removed");
         }
     }
