@@ -27,7 +27,7 @@ namespace OnlineEducationaAPI.Controllers
         // GET api/courses -> Returns all courses
         public async Task<IActionResult> GetAll()
         {
-            var courses = await dbcontext.Courses.FindAsync();
+            var courses = await dbcontext.Courses.ToListAsync();
             return Ok(courses);
         }
 

@@ -1,57 +1,59 @@
-div.form-container{
+.form-container{
     display:flex;
     align-items: center;
-    justify-content: center;
-    margin: auto auto;
+    flex-direction: column;
     width: min(500px, 100%);
-    text-align: center;
     font-size:22px;
+    font-family: "Lisu Bosa", Tiems, serif
 }
 
 div.form-tab-slide{
-    width: min(500px, 100%);
+    width: 75%;
+    margin: 1rem 0;
 }
-div.form-container ul, div.form-container li{
-    list-style-type:none;
-    display:inline-block;
+.form-container ul{
+    list-style: none;
+    display:flex;
+    flex-direction: row;
     padding:0;
 }
-div.form-container li{
-    background-color: rgb(88, 143, 188);
+.form-container li{
+    flex: 1;
+    display:inline-block;
+    padding:0;
+    text-align: center;
+}
+.form-container li{
+    background-color: #5D8D8D;
     color: #FFF;
     padding: 5px 15px;
-    border: 3px solid transparent;
     cursor:pointer;
 }
-div.form-container li:first-child{
-    border-top-left-radius:15px;
-    border-bottom-left-radius:15px;
-    padding-left:25px;
+.form-container li:hover{
+    background-color: #0D5A5A
 }
-
-div.form-container li:last-child{
-    border-top-right-radius:15px;
-    border-bottom-right-radius:15px;
-    padding-right:25px;
+.form-container li.selected-choice{
+    background-color: #004848;
 }
-div.form-container li:hover{
-    background-color: #ededed;
-    color: rgb(32, 102, 159);
-    border: 3px solid rgb(88, 143, 188);
+.form-container label{
+    margin: 1rem 0;
 }
-div.form-container li.selected-choice{
-    background-color: rgb(32,102,159);
-    color:#FFF;
-}
-div.form-container input[type=text], div.form-container input[type=password], div.form-container input[type=email], .common-input {
-    border: 2px solid rgb(186, 186, 186);
-    background-color: #ededed;
+.form-container input[type=text], .form-container input[type=password], .form-container input[type=email]{
+    border: 1px solid #b9b9b9;
+    background-color: #FFF;
     width:75%;
     padding:15px 25px;
-    border-radius:15px;
     font-size:22px;
-    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif
 }
-div.form-container button{
+.form-container button{
     margin: 30px 0;
+}
+
+@media screen and (max-width: 768px){
+    .form-container ul{
+        flex-direction: column;
+    }
+   .form-container h1{
+    text-align: center;
+   } 
 }

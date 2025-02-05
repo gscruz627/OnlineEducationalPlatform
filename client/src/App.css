@@ -1,21 +1,35 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+* {
+  margin: 0;
+  box-sizing: border-box;
+  line-height:1.5;
+}
+section h1, article h1, nav h1{
+  font-size:2rem;
+}
+section h2, article h2, nav h2{
+  font-size:1.5rem;
 }
 
+.color-gray{ color: #565A5C;}
+.color-brown{ color: brown;}
+
+.font-formal{ font-family: "Lisu Bosa", Times, serif }
 p, li, a{
   font-size:22px;
 }
+
 a{
-  color: rgb(32, 102, 159);
   text-decoration: none;
+}
+#root{
+  max-width:1280px;
+  margin: auto auto;
+  padding: 2rem 0;
 }
 div.main-content{
   background-color: #ededed;
-  margin-top:10px;
-  padding: 15px;
-  color:rgb(32, 102, 159);
+  margin:1rem 0;
+  padding: 1rem 2.5em;
 }
 
 button {
@@ -23,25 +37,49 @@ button {
   font-size:22px;
   border-radius:8px;
   border:none;
-  margin:5px;
   outline:none;
   cursor:pointer;
-  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  font-family: "Sofia Pro", Arial, sans-serif;
 }
 
-button.blue-button{  
-  background-color: rgb(32, 102, 159);
+button a{
+  color: #FFF;
+}
+
+button.blue-btn{  
+  background-color: #226666;
   color: #FFF;
   
 }
-button.blue-button:hover{
-  background-color: rgb(20, 65, 101);
+button.blue-btn:hover{
+  background-color: #003333;
 }
 
-button.red-button{
-  background-color: rgb(184, 65, 65);
+button.red-btn{
+  background-color: #B03434;
   color:#FFF;
 }
 button.red-button:hover{
   background-color: rgb(118, 41, 41);
+}
+
+.error-box{
+  font-size:22px;
+  border:1px solid #B03434;
+  color: #FFF;
+  background-color: #EB9B9B;
+  padding: 10px 15px;
+}
+
+.success-box{
+  font-size:22px;
+  color: #FFF;
+  border: 1px solid #006000;
+  background-color: #7CBC7C;
+  padding: 10px 15px;
+}
+@media screen and (max-width: 768px){
+  #root{ 
+    padding: 0;
+  }
 }

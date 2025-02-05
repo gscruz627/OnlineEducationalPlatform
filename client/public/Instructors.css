@@ -1,44 +1,69 @@
-div.context-menu{
+.inline-input{
+    font-size: 22px;
+    font-family: "Lisu Bosa", Times, serif;
+    font-weight: bold;
+    border:none;
+    border-bottom:1px solid #000;
+    background-color: #e1e1e1;
+}
+
+.delete-box{
+    height:108px;
+    background-color: brown;
+    color: #FFF;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.delete-box button{
+    border-radius: none;
+    margin: 0 1rem;
+    width:100px;
+    padding:5px 10px;
+}
+.member-item{
     display:grid;
-    grid-template-columns: 25% 75%;
-    margin-top:2rem;
-}
-div.side-bar{
-    width:80%;
-}
-div.side-bar-item{
-    border:3px solid rgb(143, 143, 143);
-    padding: 0 15px;
-    margin-bottom:15px;
-}
-div.side-bar h2{
-    color: rgb(89, 46, 16);
-}
-div.side-bar li, div.side-bar ul{
-    list-style-type:none;
-    display:block;
-    padding:0;
-}
-div.side-bar li{
-    color: rgb(12, 85, 12);
-    cursor:pointer;
-    border-bottom:1px solid rgba(34, 147, 34, 0.209);
+    grid-template-columns: 10% 80% 10%;
+    background-color: #FFF;
     margin: 1rem 0;
 }
-input[type=text].generic-bar{
-    width:80%;
-    font-size:22px;
-    background-color: transparent;
-    padding:10px 15px;
-    border:none;
-    outline:none;
-    border-bottom:1px solid gray;
-    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif
+.member-item-buttons {
+    height:100%;
+    display:flex;
+    flex-direction: column;
 }
-div.instructor-item{
-    display:grid;
-    grid-template-columns: 70% 30%;
+.member-item div:not(.member-item-buttons){
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
 }
-div.instructor-item p button{
-    display:inline !important;
+.member-item-buttons button{
+    border-radius:0;
+    height:50%;
+    margin:0;
+}
+
+@media screen and (max-width: 768px){
+    .member-item-user-logo{
+        display:none;
+    }
+    .member-item h2::before{
+        content: "\1F464";
+    }
+    .member-item{
+        padding: 1rem;
+        grid-template-columns: 100%;
+    }
+    .member-item-buttons{
+        flex-direction: row;
+    }
+    .member-item-buttons button{
+        height:100%;
+        width:100%;
+    }
+    .delete-box{
+        padding:1rem;
+        height:auto;
+    }
 }

@@ -30,6 +30,8 @@ namespace OnlineEducationaAPI
                 if (admin != null)
                 {
                     context.Succeed(requirement); // User is an admin
+                    return Task.CompletedTask;
+
                 }
             }
             else if (requirement.Role == "Instructor")
@@ -38,6 +40,8 @@ namespace OnlineEducationaAPI
                 if (instructor != null)
                 {
                     context.Succeed(requirement); // User is an instructor
+                    return Task.CompletedTask;
+
                 }
             }
             else if (requirement.Role == "Either")
@@ -47,6 +51,8 @@ namespace OnlineEducationaAPI
                 if (admin != null || instructor != null)
                 {
                     context.Succeed(requirement);
+                    return Task.CompletedTask;
+
                 }
             }
 

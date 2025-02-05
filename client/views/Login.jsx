@@ -4,12 +4,12 @@ import '../src/App.css'
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { setLogin } from '../store';
-import { jwtDecode}  from "jwt-decode";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loginType, setLoginType] = useState("student");
+  const [errorTriggered, setErrorTriggered] = useState(false);
   const [email, setEmail] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -33,63 +33,75 @@ const Login = () => {
     }
   }
   const loginStudent = async () => {
+    try{
       const request = await fetch("https://localhost:7004/api/students/login", {
         method: "POST",
-        headers: {
-          "Content-Type" : "application/json"
-        },
-        body: JSON.stringify({
-          "email" : email,
-          "password" : password
-        })
+        headers: { "Content-Type" : "application/json" },
+        body: JSON.stringify({ "email" : email, "password" : password })
       })
-      const response = await request.json();
-      if (request.ok){
-        dispatch(setLogin({user:response.student, token: response.token, role: "student"}))
-        navigate("/");
+      if (!request.ok) {
+        setErrorTriggered(true);
+        setTimeout(() =>  setErrorTriggered(false), 5000);
+        return; // Stop execution if login fails
       }
+      const response = await request.json();
+      dispatch(setLogin({ user: response.student, token: response.token, role: "student" }));
+      navigate("/");
+    } catch (error) {
+      setErrorTriggered(true);
+      setTimeout(() => setErrorTriggered(false), 5000);
+    }  
   }
   
   const loginInstructor = async () => {
-    const request = await fetch("https://localhost:7004/api/instructors/login", {
-      method: "POST",
-      headers: {
-        "Content-Type" : "application/json"
-      },
-      body: JSON.stringify({
-        "email" : email,
-        "password" : password
+    try{
+      const request = await fetch("https://localhost:7004/api/instructors/login", {
+        method: "POST",
+        headers: { "Content-Type" : "application/json" },
+        body: JSON.stringify({ "email" : email, "password" : password })
       })
-    })
-    const response = await request.json();
-    if (request.ok){
-      dispatch(setLogin({user:response.instructor, token: response.token, role: "instructor"}))
+      if (!request.ok) {
+        setErrorTriggered(true);
+        setTimeout(() =>  setErrorTriggered(false), 5000);
+        return; // Stop execution if login fails
+      }
+      const response = await request.json();
+      dispatch(setLogin({ user: response.instructor, token: response.token, role: "instructor" }));
       navigate("/");
-    }
+    } catch (error) {
+      setErrorTriggered(true);
+      setTimeout(() => setErrorTriggered(false), 5000);
+    }  
   }
 
   const loginAdministrator = async () => {
-      const request = await fetch( "https://localhost:7004/api/authority/login", {
+    try {
+      const request = await fetch("https://localhost:7004/api/authority/login", {
         method: "POST",
-        headers: {
-          "Content-Type" : "application/json",
-        },
-        body: JSON.stringify({
-          "username":username,
-          "password":password
-        })
-      })
-      const response = await request.json()
-      if(request.ok){
-        dispatch( setLogin({user: response.admin, token: response.token, role: 'admin'}))
-        navigate("/")
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!request.ok) {
+        setErrorTriggered(true);
+        setTimeout(() =>  setErrorTriggered(false), 5000);
+        return; // Stop execution if login fails
       }
-  }
+  
+      const response = await request.json();
+      dispatch(setLogin({ user: response.admin, token: response.token, role: "admin" }));
+      navigate("/");
+    } catch (error) {
+      setErrorTriggered(true);
+      setTimeout(() => setErrorTriggered(false), 5000);
+    }
+  };
+  
 
   return (
-    <div className='form-container'>
-      <form onSubmit={(e) => executeLogin(e)}>
+      <form style={{justifyContent: "center", margin: "auto auto"}} className="form-container" onSubmit={(e) => executeLogin(e)}>
         <h1>Login</h1>
+        
         <div className='form-tab-slide'>
           <ul>
             { (loginType == "student") ? (
@@ -109,28 +121,28 @@ const Login = () => {
             )}
           </ul>
         </div>
+        {errorTriggered && 
+        <div className='error-box'>
+          Credentials not Valid, User Not found
+        </div>
+        }
         { loginType == "admin" ? (
           <>
-            <label for='username'>Username:</label><br/>
+            <label for='username'>Username:</label>
             <input type="text" onChange={(e) => setUsername(e.target.value)} value={username}></input>
           </>
         ) : (
             <>
-              <label for='email'>Email:</label><br/>
+              <label for='email'>Email:</label>
               <input type="email" onChange={(e) => setEmail(e.target.value)} value={email}></input>
             </>
         )}
-        
-        <br/>
-        <br/>
 
-        <label for='password'>Password:</label><br/>
+        <label for='password'>Password:</label>
         <input type="password" onChange={(e) => setPassword(e.target.value)} value={password}></input>
 
-        <button type='submit' className='blue-button'>Login</button>
+        <button style={{width:"75%"}} type='submit' className='blue-btn'>Login</button>
       </form>
-      
-    </div>
   )
 }
 

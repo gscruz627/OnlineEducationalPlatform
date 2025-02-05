@@ -109,24 +109,14 @@ const Courses = () => {
   return (
     <div className="context-menu">
       
-      <CommonSideBar choice="course"/>
+      <CommonSideBar choice="course" updater={setCourses}/>
       <div>
-        <h1>Manage Courses</h1>
-        <hr/>
-        <p>In this section you can manage courses and perform actions such as searching, creating, and deleting courses.
-          <br/>You can use the help menu that will display a sub-menu below it for help in navigating.
-          <br/>Use the search bar to begin searching or use the create a course form.
-        </p>
-
-        <form onSubmit={(e) => search(e)}>
-            <h1>Search Course</h1>
-            <hr/>
-            <p>Search an course by first and last name or email</p>
-            <input placeholder="Ex. John Doe" className="generic-bar" type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
-            <button className="blue-button" type="submit">Search</button>
+        <form onSubmit={(e) => search(e)} style={{marginBottom: "1rem"}}>
+            <input className="input-with-side" placeholder="Ex. ART100 or Intro to Art" type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
+            <button className="blue-btn side-with-input" type="submit">Search</button>
         </form>
 
-        <h1>Courses {searched ? `(Searched: ${searchCapture})` : "" }</h1>
+        <h1 className='color-gray'>Courses {searched ? `(Searched: ${searchCapture})` : "" }</h1>
         {searchCapture && <span style={{color: "rgb(184, 65, 65)", cursor: "pointer"}} onClick={() => clearSearch()}>Clear Search</span>}
         <hr/>
 
