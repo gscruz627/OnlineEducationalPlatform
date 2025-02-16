@@ -13,12 +13,11 @@ import Profile from "../views/Profile";
 import LoggedOut from "../views/LoggedOut";
 import Login from "../views/Login";
 import Members from "../views/Members";
-import CreateMember from "../views/CreateMember";
 import AdminCourses from "../views/AdminCourses";
 import AdminCourse from "../views/AdminCourse";
 import AdminSection from "../views/AdminSection";
 import CoursePage from "../views/CoursePage";
-import CourseAssignment from "../views/CourseAssignments";
+import CourseAssignments from "../views/CourseAssignments";
 import CourseEnrollment from "../views/CourseEnrollment";
 import Assignment from "../views/Assignment";
 import StudentList from "../views/StudentList";
@@ -48,7 +47,6 @@ const App = () => {
 
           {/* Admin Routes */}
           <Route path="/admin_members/:kind" element={isAdmin ? <Members /> : <Navigate to="/404" />} />
-          <Route path="/create_member/:kind" element={isAdmin ? <CreateMember /> : <Navigate to="/404" />} />
           <Route path="/admin_courses" element={isAdmin ? <AdminCourses /> : <Navigate to="/404" />} />
           <Route path="/admin_individual_course/:courseId" element={isAdmin ? <AdminCourse /> : <Navigate to="/404" />} />
           <Route path="/admin_individual_section/:sectionId" element={isAdmin ? <AdminSection /> : <Navigate to="/404" />} />
@@ -58,7 +56,7 @@ const App = () => {
           <Route path="/course_enrollment" element={isStudent ? <CourseEnrollment /> : <Navigate to="/404" />} />
 
           <Route path="/course_page/:kind/:sectionId/" element={isNonAdmin ? <CoursePage /> : <Navigate to="/404" />} />
-          <Route path="/course_page/:kind/:sectionId/assignments" element={isNonAdmin ? <CourseAssignment /> : <Navigate to="/404" />} />
+          <Route path="/course_page/:kind/:sectionId/assignments" element={isNonAdmin ? <CourseAssignments /> : <Navigate to="/404" />} />
           <Route path="/course_page/:kind/:sectionId/assignments/:assignmentId" element={isNonAdmin ? <Assignment /> : <Navigate to="/404" />} />
           <Route path="/course_page/:sectionId/students" element={isNonAdmin ? <StudentList /> : <Navigate to="/404" />} />
 
