@@ -1,16 +1,16 @@
-import React from 'react'
-import '../public/Topbar.css'
+import React from 'react';
+import './styles/Topbar.css';
 
 const Topbar = () => {
   return (
     <header className='topbar'>
-        <span>&#128212;</span>
+        <span role="img" aria-label="Book Icon">&#128212;</span>
         <div>
             <h1>Online Learning Platform</h1>
             <h3>Small-scale online platform for teaching and assistance.</h3>
         </div>
     </header>
-  )
+  );
 }
 
-export default Topbar
+export default React.memo(Topbar);

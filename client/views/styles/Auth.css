@@ -38,7 +38,7 @@ div.form-tab-slide{
 .form-container label{
     margin: 1rem 0;
 }
-.form-container input[type=text], .form-container input[type=password], .form-container input[type=email]{
+.form-container input[type=text], .form-container input[type=password], .form-container input[type=email], .form-container select, .form-container input[type=number]{
     border: 1px solid #b9b9b9;
     background-color: #FFF;
     width:75%;

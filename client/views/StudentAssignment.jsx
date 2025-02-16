@@ -87,7 +87,19 @@ const StudentAssignment = () => {
                 <h1>{assignment && assignment.name}</h1>
                 <hr/>
                 <p>{assignment && assignment.description}</p>
-                <p>Due on {assignment && new Intl.DateTimeFormat("en-US", { month: "short", day: "2-digit"}).format(new Date(assignment.dueDate))}</p>
+                <p
+                    style={{
+                    display: "inline",
+                    color: new Date() > new Date(assignment.dueDate) ? "red" : "black",
+                    }}
+                    >
+                    Due on{" "}
+                    {new Intl.DateTimeFormat("en-US", {
+                    month: "short",
+                    day: "2-digit",
+                    year: "numeric",
+                    }).format(new Date(assignment.dueDate))}
+                </p>
                 <hr/>
                 <h2>Submissions</h2>
                 { submissions && submissions.map( (submission, i) => (

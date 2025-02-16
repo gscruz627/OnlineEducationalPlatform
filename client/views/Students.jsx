@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import "../src/App.css"
-import "../public/Instructors.css"
+import "./styles/Instructors.css"
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import CommonSideBar from '../components/CommonSideBar';
 
 const Students = () => {

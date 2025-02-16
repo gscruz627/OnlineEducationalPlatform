@@ -38,7 +38,7 @@ namespace OnlineEducationaAPI.Controllers
 
 
         [HttpPatch]
-        [Authorize(Policy = "Instructor")]
+        [Authorize(Policy = "RequireInstructor")]
         [Route("{id:Guid}")]
         // PATCH api/annnounncements/0 -> Edits this announcement
         public async Task<IActionResult> Edit(Guid id, [FromBody] AddNewAnnouncementDTO announcementDTO)
@@ -57,7 +57,7 @@ namespace OnlineEducationaAPI.Controllers
 
 
         [HttpPost]
-        [Authorize(Policy = "Instructor")]
+        [Authorize(Policy = "RequireInstructor")]
         // POST api/announcements -> Creates a new annnouncement.
         public async Task<IActionResult> NewAnnouncement(AddNewAnnouncementDTO announcementDTO)
         {
@@ -73,7 +73,7 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpDelete]
-        [Authorize(Policy = "Instructor")]
+        [Authorize(Policy = "RequireInstructor")]
         [Route("{id:Guid}")]
         // DELETE api/announcements/0 -> Deletes an announcement.
         public async Task<IActionResult> Delete(Guid id)

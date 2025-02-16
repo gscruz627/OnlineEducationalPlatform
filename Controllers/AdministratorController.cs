@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -76,5 +77,27 @@ namespace OnlineEducationaAPI.Controllers
             return Ok(new { Admin = new { admin.Id, admin.Username}, Token = jwt_token });
         }
 
+        [HttpGet]
+        [Authorize]
+        [Route("user/{id:Guid}")]
+        public async Task<IActionResult> GetAnyUser(Guid id)
+        {
+            var admin = await dbcontext.Administrators.FindAsync(id);
+            if (admin is not null)
+            {
+                return Ok(new { User = admin, Role = "admin" });
+            }
+            var instructor = await dbcontext.Instructors.FindAsync(id);
+            if (instructor is not null)
+            {
+                return Ok(new { User = instructor, Role = "instructor"});
+            };
+            var student = await dbcontext.Students.FindAsync(id);
+            if (student is not null)
+            {
+                return Ok(new { User = student, Role = "student" });
+            }
+            return NotFound();
+        }
     }
 }

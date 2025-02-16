@@ -18,17 +18,47 @@ namespace OnlineEducationaAPI.Controllers
         // GET api/sections/0 -> Get section by Id
         public async Task<IActionResult> GetSection(Guid id)
         {
-            var section = await dbcontext.Sections.FindAsync(id);
+            var section = await dbcontext.Sections
+            .Where(section => section.Id == id)
+            .Join(dbcontext.Courses,
+            section => section.CourseID,
+            course => course.Id,
+            (section, course) => new
+            {
+            section.Id,
+            CourseId = section.CourseID,
+            section.SectionCode,
+            course.CourseCode,
+            Image = course.ImageURL,
+            course.Title,
+            section.InstructorID
+
+            }).FirstOrDefaultAsync();
             return Ok(section);
         }
-
+        
         [HttpGet]
         [Authorize]
         [Route("course/{id:Guid}")]
         // GET api/sections/course/0 -> Get all sections by a specific course's Id.
         public async Task<IActionResult>GetSectionsByCourse(Guid id)
         {
-            var sections = await dbcontext.Sections.Where((section) => section.CourseID == id).ToListAsync();
+            var sections = await dbcontext.Sections
+            .Where(section => section.CourseID == id)
+            .Join(dbcontext.Courses,
+            section => section.CourseID,
+            course => course.Id,
+            (section, course) => new
+            {
+                section.Id,
+                CourseId = section.CourseID,
+                section.SectionCode,
+                course.CourseCode,
+                Image = course.ImageURL,
+                course.Title,
+                section.IsActive,
+                section.InstructorID
+            }).ToListAsync();
             return Ok(sections);
         }
 
@@ -55,10 +85,33 @@ namespace OnlineEducationaAPI.Controllers
         // PATCH api/sections/0 -> Edit a section by id and return it
         public async Task<IActionResult> Edit(Guid id, [FromBody] AddNewSectionDTO sectionDTO)
         {
+            Console.WriteLine(sectionDTO.InstructorID);
             var section = await dbcontext.Sections.FindAsync(id);
             if (section is null)
             {
                 return NotFound();
+            }
+            if (section.InstructorID != sectionDTO.InstructorID)
+            {
+                section.InstructorID = sectionDTO.InstructorID;
+                await dbcontext.SaveChangesAsync();
+                var editedSection1 = await dbcontext.Sections
+                            .Where(section => section.Id == id)
+                            .Join(dbcontext.Courses,
+                            section => section.CourseID,
+                            course => course.Id,
+                            (section, course) => new
+                            {
+                                section.Id,
+                                CourseId = section.CourseID,
+                                section.SectionCode,
+                                course.CourseCode,
+                                Image = course.ImageURL,
+                                course.Title,
+                                section.InstructorID
+
+                            }).FirstOrDefaultAsync();
+                return Ok(editedSection1);
             }
             var sectionCheck = await dbcontext.Sections.FirstOrDefaultAsync((section) => section.CourseID == sectionDTO.CourseID && section.SectionCode == sectionDTO.SectionCode);
             if (sectionCheck is not null)
@@ -69,7 +122,24 @@ namespace OnlineEducationaAPI.Controllers
             section.InstructorID = sectionDTO.InstructorID;
             section.CourseID = sectionDTO.CourseID;
             await dbcontext.SaveChangesAsync();
-            return Ok(section);
+
+            var editedSection = await dbcontext.Sections
+            .Where(section => section.Id == id)
+            .Join(dbcontext.Courses,
+            section => section.CourseID,
+            course => course.Id,
+            (section, course) => new
+            {
+                section.Id,
+                CourseId = section.CourseID,
+                section.SectionCode,
+                course.CourseCode,
+                Image = course.ImageURL,
+                course.Title,
+                section.InstructorID
+
+            }).FirstOrDefaultAsync();
+            return Ok(editedSection);
         }
 
         [HttpPost]
@@ -134,7 +204,7 @@ namespace OnlineEducationaAPI.Controllers
                       CourseId = section.CourseID,
                       section.SectionCode,
                       course.CourseCode,
-                      Image = course.ImageURL,
+                      course.ImageURL,
                       course.Title
                   }).FirstOrDefaultAsync();
                 sections.Add(section);
@@ -223,6 +293,7 @@ namespace OnlineEducationaAPI.Controllers
             {
                 return NotFound();
             }
+            await dbcontext.Enrollments.Where((enrollment) => enrollment.SectionID == id).ExecuteDeleteAsync();
             dbcontext.Sections.Remove(section);
             await dbcontext.SaveChangesAsync();
             return Ok("Section was Removed");

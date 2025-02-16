@@ -1,9 +1,9 @@
 import React, {useState} from 'react'
-import '../public/Auth.css'
+import './styles/Auth.css'
 import '../src/App.css'
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { setLogin } from '../store';
+import { setEnrollments, setLogin } from '../store';
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -46,6 +46,17 @@ const Login = () => {
       }
       const response = await request.json();
       dispatch(setLogin({ user: response.student, token: response.token, role: "student" }));
+
+      const enrollmentsRequest = await fetch(`https://localhost:7004/api/sections/enrollments/${response.student.id}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${response.token}`
+        }
+      })
+
+      const enrollmentsResponse = await enrollmentsRequest.json();
+      const sectionIds = enrollmentsResponse.map( (e) => e.id);
+      dispatch(setEnrollments({enrollments: sectionIds}))
       navigate("/");
     } catch (error) {
       setErrorTriggered(true);
@@ -128,17 +139,17 @@ const Login = () => {
         }
         { loginType == "admin" ? (
           <>
-            <label for='username'>Username:</label>
+            <label htmlFor='username'>Username:</label>
             <input type="text" onChange={(e) => setUsername(e.target.value)} value={username}></input>
           </>
         ) : (
             <>
-              <label for='email'>Email:</label>
+              <label htmlFor='email'>Email:</label>
               <input type="email" onChange={(e) => setEmail(e.target.value)} value={email}></input>
             </>
         )}
 
-        <label for='password'>Password:</label>
+        <label htmlFor='password'>Password:</label>
         <input type="password" onChange={(e) => setPassword(e.target.value)} value={password}></input>
 
         <button style={{width:"75%"}} type='submit' className='blue-btn'>Login</button>

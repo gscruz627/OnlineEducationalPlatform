@@ -19,7 +19,7 @@ namespace OnlineEducationaAPI.Controllers
         private readonly IConfiguration configuration = configuration;
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdmin")]
+        [Authorize]
         [Route("{id:Guid}")]
         // GET api/instructors/0 -> Get instructor by Id
         public async Task<IActionResult> Get(Guid id)
@@ -55,6 +55,11 @@ namespace OnlineEducationaAPI.Controllers
         // POST api/instructors -> Creates a new instructor
         public async Task<IActionResult> Register(AddUserDTO instructorDTO)
         {
+            var existingUser = await dbcontext.Instructors.FirstOrDefaultAsync((instructor) => instructor.Name == instructorDTO.Name && instructor.Email == instructorDTO.Email);
+            if (existingUser is not null)
+            {
+                return Unauthorized("Authentication Error");
+            }
             var hasher = new PasswordHasher<Instructor>();
             var instructor = new Instructor()
             {
@@ -64,7 +69,7 @@ namespace OnlineEducationaAPI.Controllers
             };
             await dbcontext.Instructors.AddAsync(instructor);
             await dbcontext.SaveChangesAsync();
-            return CreatedAtAction("Get", new { instructor.Id }, instructor);
+            return CreatedAtAction("Get", new { instructor.Id }, new { instructor.Id, instructor.Name, instructor.Email });
         }
 
         [HttpPost]
@@ -126,7 +131,7 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpDelete]
-        [Authorize(Policy="RequireInstructor")]
+        [Authorize(Policy="RequireAdmin")]
         [Route("{id:Guid}")]
         // DELETE api/instructors/0 -> Deletes an instructor by id.
         public async Task<IActionResult> DeleteInstructor(Guid id)
@@ -135,6 +140,11 @@ namespace OnlineEducationaAPI.Controllers
             if (instructor is null)
             {
                 return NotFound();
+            }
+            var sectionsUnderInstructor = await dbcontext.Sections.Where((section) => section.InstructorID == id).ToListAsync();
+            if (sectionsUnderInstructor.Count > 0)
+            {
+                return BadRequest(new { Message = "Must first expell instructor from sections and change their instructors", sectionsUnderInstructor.Count });
             }
             dbcontext.Instructors.Remove(instructor);
             await dbcontext.SaveChangesAsync();
@@ -153,6 +163,8 @@ namespace OnlineEducationaAPI.Controllers
                 return NotFound();
             }
             var sections = await dbcontext.Sections.Where((section) => section.InstructorID == id).ToListAsync();
+            Console.WriteLine(sections.Count);
+            Console.WriteLine(id);
             List<Object> returnSections = [];
             foreach(var section in sections)
             {

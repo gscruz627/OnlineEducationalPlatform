@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import "../src/App.css"
-import "../public/auth.css"
+import "./styles/auth.css"
 import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import CommonSideBar from '../components/CommonSideBar'

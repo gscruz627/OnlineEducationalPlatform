@@ -1,15 +1,57 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useSelector } from 'react-redux';
 
 const StudentList = () => {
     const { sectionId } = useParams();
+    const kind = useSelector( (state) => state.role);
+    const enrollments = useSelector( (state) => state.enrollments);
+    const [section, setSection] = useState(null);
     const [students, setStudents] = useState(null);
+    const [instructor, setInstructor] = useState(null);
     const token = useSelector( (state) => state.token);
     const navigate = useNavigate();
 
+    const loadSectionInformation = async () => {
+        let request = null;
+        try{
+            request = await fetch(`https://localhost:7004/api/sections/${sectionId}`, {
+                method: 'GET',
+                headers: {
+                    "Authorization" : `Bearer ${token}`
+                }
+            })
+        } catch(error) {
+            alert("Fatal Error, please reload");
+            return;
+        }
+        if (!request.ok){
+            alert('Fatal Error, please reload');
+            return;
+        }
+        const response = await request.json();
+        setSection(response);
+
+        let instructorRequest = null;
+        try{
+            instructorRequest = await fetch(`https://localhost:7004/api/instructors/${response.instructorID}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+        } catch(error) {
+            alert("Fatal Error, please reload");
+            return;
+        }
+        if (!request.ok){
+            alert('Fatal Error, please reload');
+            return;
+        }
+        const instructorResponse = await instructorRequest.json();
+        setInstructor(instructorResponse);
+    }
     const loadStudentsEnrolled = async () => {
-        const request = await fetch(`https://localhost:7004/api/sections/students/${sectionId}`, {
+        const request = await fetch(`https://localhost:7004/api/sections/${sectionId}/students`, {
             method: "GET",
             headers: {
                 "Authorization" : `Bearer ${token}`
@@ -21,29 +63,49 @@ const StudentList = () => {
         }     
     }
     useEffect( () => {
+        if (!enrollments.includes(sectionId.toLowerCase())){
+            navigate("/404")
+        }
+        loadSectionInformation();
         loadStudentsEnrolled();
     }, [])
     return (
         <div className='context-menu'>
             <div className="side-bar">
-                <h2 style={{display: "inline-block", paddingButtom: "10px"}}>&#128270; Navigate </h2>
-                <div className="side-bar-item">
-                    <ul>
-                        <li onClick={() => { navigate(`/course_view/instructor/${sectionId}`)}}>- Announcements</li>
-                        <li onClick={() => { navigate(`/course_view/instructor/assignments/${sectionId}`)}}>- Assignments</li>
-                        <li onClick={() => { navigate(`/course_view/instructor/student_list/${sectionId}`)}}>- Students</li>
-                    </ul>
-                </div>
+            <h1>{section && `${section.courseCode} - ${section.sectionCode}`}</h1>
+
+                <ul>
+                    <li className="side-bar-item" onClick={() => { navigate(`/course_page/${kind}/${sectionId}/`)}}>Announcements</li>
+                    <li className="side-bar-item" onClick={() => { navigate(`/course_page/${kind}/${sectionId}/assignments/`)}}>Assignments</li>
+                    <li className="side-bar-item" onClick={() => { navigate(`/course_page/${sectionId}/students/`)}}>Students</li>
+                </ul>
             </div>
             <div>
-                <h1>Students Enrolled</h1>
+
+                <h1 className='color-gray'>Instructor</h1>
                 <hr/>
-                { students && students.map( (student) => (
-                <div style={{marginRight: "5%", display: "flex", justifyContent: "space-between"}}>
-                    <p>{student.name}</p>
-                    <p>{student.email}</p>
-                </div>  
-                ))}
+                <div className="member-item">
+                    <div>
+                        <span className="member-item-user-logo" style={{ fontSize: "48px", textAlign: "center" }}>&#128100;</span>
+                    </div>
+                    <div>
+                        <h2><Link to={`/profile/${instructor?.id}`}>{instructor?.name}</Link></h2>
+                    </div>
+                </div>
+                <h1 className='color-gray'>Students</h1>
+                <hr/>
+
+                {students && students[0] && students.map((student, i) => (
+                    <div className="member-item" key={i}>
+                        <div>
+                            <span className="member-item-user-logo" style={{ fontSize: "48px", textAlign: "center" }}>&#128100;</span>
+                        </div>
+                        <div>
+                            <h2><Link to={`/profile/${student.id}`}>{student.name}</Link></h2>
+                        </div>
+                    </div>
+                    )
+                )}
             </div>
         </div>
     )

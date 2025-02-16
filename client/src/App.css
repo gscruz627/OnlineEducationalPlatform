@@ -1,3 +1,8 @@
+#root{
+  max-width:1280px;
+  margin: auto auto;
+  padding: 2rem 0;
+}
 * {
   margin: 0;
   box-sizing: border-box;
@@ -20,11 +25,6 @@ p, li, a{
 
 a{
   text-decoration: none;
-}
-#root{
-  max-width:1280px;
-  margin: auto auto;
-  padding: 2rem 0;
 }
 div.main-content{
   background-color: #ededed;
@@ -59,7 +59,7 @@ button.red-btn{
   background-color: #B03434;
   color:#FFF;
 }
-button.red-button:hover{
+button.red-btn:hover{
   background-color: rgb(118, 41, 41);
 }
 
@@ -77,6 +77,9 @@ button.red-button:hover{
   border: 1px solid #006000;
   background-color: #7CBC7C;
   padding: 10px 15px;
+}
+a{
+  color: #000;
 }
 @media screen and (max-width: 768px){
   #root{ 

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { useNavigate, Link } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { setEnrollments } from '../store'
 import "../src/App.css"
-import "../public/MyCourses.css"
+import "./styles/MyCourses.css"
 
 const CourseEnrollment = () => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -12,10 +13,13 @@ const CourseEnrollment = () => {
     const [sections, setSections] = useState(null);
     const [course, setCourse] = useState(null);
     const [instructors, setInstructors] = useState(null);
+    const [enrollmentError, setEnrollmentError] = useState("");
+    const [enrollmentSuccess, setEnrollmentSuccess] = useState("");
 
     const navigate = useNavigate();
     const user = useSelector( (state) => state.user);
     const token = useSelector( (state) => state.token);
+    const dispatch = useDispatch();
 
     const getAllCourses = async () => {
         const request = await fetch('https://localhost:7004/api/courses', {
@@ -29,7 +33,7 @@ const CourseEnrollment = () => {
           setCourses(response);
         }
       }
-      const search = async (e) => {
+    const search = async (e) => {
         e.preventDefault();
         if (searchTerm === ""){
           return;
@@ -47,14 +51,14 @@ const CourseEnrollment = () => {
         if(request.ok){
           setCourses(response)
         }
-      }
-      const clearSearch = async () => {
+    }
+    const clearSearch = async () => {
         setSearched(false);
         setSearchCapture(null);
         setSearchTerm("");
         await getAllCourses();
-      }
-      const selectCourse = async (course, courseId) => {
+    }
+    const selectCourse = async (course, courseId) => {
         const request = await fetch(`https://localhost:7004/api/sections/course/${courseId}`, {
             method: "GET",
             headers: {
@@ -67,7 +71,7 @@ const CourseEnrollment = () => {
             setSections(response)
         }
       }
-      const loadInstructors = async () => {
+    const loadInstructors = async () => {
         const request = await fetch("https://localhost:7004/api/instructors", {
             method: "GET",
             headers: {
@@ -92,11 +96,26 @@ const CourseEnrollment = () => {
         })
       });
       if (request.ok){
-        alert("You enrolled successfully!");
-        navigate("/mycourses")
+        setEnrollmentSuccess("You enrolled successfully!");
+        setTimeout(() => {
+          setEnrollmentSuccess("");
+        }, 5000);
+        const enrollmentsRequest = await fetch(`https://localhost:7004/api/sections/enrollments/${user.id}`, {
+                method: 'GET',
+                headers: {
+                  Authorization: `Bearer ${token}`
+                }
+              })
+        
+              const enrollmentsResponse = await enrollmentsRequest.json();
+              const sectionIds = enrollmentsResponse.map( (e) => e.id);
+              dispatch(setEnrollments({enrollments: sectionIds}))
         return;
       } else if (request.status === 400){
-        alert("You are already enrolled in that course or section!")
+        setEnrollmentError("You already enrolled in that course");
+        setTimeout(() => {
+          setEnrollmentError("");
+        }, 5000);
         return;
       }
     }
@@ -106,17 +125,23 @@ const CourseEnrollment = () => {
       }, [])
     return (
         <div className="context-menu">
-            <div className="section-selector-holder">
+            <div className="section-selector-holder" style={{width: "95%"}}>
                 {sections ? (
                     <>
                     <h2>Sections for {course.title}</h2>
-                    {sections.map ( (section) => (
+                    {enrollmentError != "" && <div className='error-box'>{enrollmentError}</div>}
+                    {enrollmentSuccess != "" && <div className='success-box'>{enrollmentSuccess}</div>}
+                    {sections.map ( (section, i) => (
                         section.isActive && (
-                            <div className="section-selector-item">
-                                <h3 onClick={() => executeEnroll(section.id)}>{course.courseCode}-{section.sectionCode}</h3>
-                                {/* You must change this brooo &*/}
-                                <p>By {instructors.filter( (instructor) => instructor.id === section.instructorID)[0].name}</p>
+                          <div className="section-item" key={i}>
+                            <div>
+                                <span className="section-item-user-logo" style={{ fontSize: "48px", textAlign: "center" }}>&#128218;</span>
                             </div>
+                            <div>
+                                <h2 style={{cursor: "pointer"}} onClick={() => executeEnroll(section.id)}>{section.courseCode} - {section.sectionCode}</h2>
+                                <p><b>By: </b><Link to={`/profile/${section.instructorID}`}>{instructors.find( instructor => instructor.id === section.instructorID)?.name}</Link></p>
+                            </div>
+                        </div>
                         )
                     ))}
                     </>
@@ -127,7 +152,13 @@ const CourseEnrollment = () => {
             </div>
 
             <div>
-            <h1>Enroll in a course</h1>
+                <form onSubmit={(e) => search(e)} style={{"marginBottom" : "1rem"}}>
+                  <input placeholder="Ex. MATH101 " className="input-with-side" type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
+                  <button className="blue-btn side-with-input" type="submit">Search</button>
+                </form>
+
+                <h1 className="color-gray">Courses Available {searched ? `(Searched: ${searchCapture})` : "" }</h1>
+                {searchCapture && <span style={{color: "rgb(184, 65, 65)", cursor: "pointer"}} onClick={() => clearSearch()}>Clear Search</span>}
                 <hr/>
                 <p>Select a course and then select a section to enroll.</p>
                 <div className="course-card-holder">

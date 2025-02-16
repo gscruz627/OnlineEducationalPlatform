@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import "../src/App.css"
-import "../public/Instructors.css"
+import "./styles/Instructors.css"
 import { useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import CommonSideBar from '../components/CommonSideBar';
 
 const Instructors = () => {
@@ -10,26 +10,31 @@ const Instructors = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searched, setSearched] = useState(false);
   const [searchCapture, setSearchCapture] = useState("");
+
+  const [students, setStudents] = useState(null);
+
   const [instructors, setInstructors] = useState(null);
   const [editing, setEditing] = useState("");
   const [editIndex, setEditIndex] = useState(null);
   const [deleteIndex, setDeleteIndex] = useState(null);
 
-  const [successEdit, setSucessEdit] = useState(false);
-  const [failedEdit, setFailedEdit] = useState(null);
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   const token = useSelector( (state) => state.token);
   const navigate = useNavigate();
 
   useEffect( () => {
     if (kind === "instructor") {
+      setStudents(null);
       getAllInstructors();
     } else if (kind === "student") {
-      
+      setInstructors(null);
+      getAllStudents();
     }
     else {
       navigate("/404")
     }
-    }, [])
+    }, [kind])
 
   const getAllInstructors = async () => {
     const request = await fetch('https://localhost:7004/api/instructors', {
@@ -44,50 +49,67 @@ const Instructors = () => {
     }
   }
 
+  const getAllStudents = async () => {
+    const request = await fetch('https://localhost:7004/api/students', {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+    const response = await request.json();
+    if(request.ok){
+      setStudents(response);
+    }
+  }
+
   const search = async (e) => {
     e.preventDefault();
     if (searchTerm === ""){
       return;
     }
     setSearched(true);
-    setSearchCapture(searchTerm);
+    console.log(searchCapture, searched, searchTerm);
     
-    const request = await fetch(`https://localhost:7004/api/instructors/search?q=${searchTerm}`, {
+    const request = await fetch(`https://localhost:7004/api/${kind}s/search?q=${searchTerm}`, {
       method: "GET",
       headers: {
         "Authorization" : `Bearer ${token}`
       }
     })
-    const response = await request.json();
     if(request.ok){
-      setInstructors(response)
+      setSearchCapture(searchTerm);
+      const response = await request.json();
+      console.log(response);
+
+      kind === "instructor" ? setInstructors(response) : setStudents(response)
     }
   }
 
   const clearSearch = async () => {
     setSearched(false);
-    setSearchCapture(null);
+    setSearchCapture("");
     setSearchTerm("");
-    await getAllInstructors();
+    kind === "instructor" ? await getAllInstructors() : await getAllStudents();
   }
 
   const executeEdit = async (e, i, id) => {
     e.preventDefault();
-    if (instructors[i] && (editing == instructors[i].name)){
+    if (kind === "instructor" && (instructors[i] && (editing == instructors[i].name)) 
+        || (kind === "student") && (students[i] && (editing == students[i].name))){
       setEditIndex(null);
       setEditing("");
       return;
     }   
     if (editing == "" || editing == null){
-      setFailedEdit("Name cannot be empty!");
+      setErrorMsg("Name cannot be empty!");
       setTimeout( () => {
-        setFailedEdit(null);
+        setErrorMsg("");
       }, 5000)
       return;
     }
     let request = null;
     try{  
-      request = await fetch(`https://localhost:7004/api/instructors/${instructors[i].id}`, {
+      request = await fetch(`https://localhost:7004/api/${kind}s/${kind === "instructor" ? instructors[i].id : students[i].id}`, {
         method: "PATCH",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -96,42 +118,53 @@ const Instructors = () => {
         body: editing
       });
     } catch (error){
-      setFailedEdit("Something unexpected happened, Try Again!");
+      setErrorMsg("Something unexpected happened, Try Again!");
       setTimeout( () => {
-        setFailedEdit(null);
+        setErrorMsg("");
       }, 5000)
       return;
     }
     if (request.ok){
       const response = await request.json();
-      setInstructors((prevInstructors) => 
-        prevInstructors.map((instructor) => {
-            if (instructor.id === id) {
-                return response;
-            }
-            return instructor;
-        })
-      );
+      if (kind === "instructor"){
+        setInstructors((prevInstructors) => 
+          prevInstructors.map((instructor) => {
+              if (instructor.id === id) {
+                  return response;
+              }
+              return instructor;
+          })
+        );
+      } else {
+        setStudents((prevStudents) => 
+          prevStudents.map((student) => {
+              if (student.id === id) {
+                  return response;
+              }
+              return student;
+          })
+        );
+      }
       setEditIndex(null);
       setEditing("");
-      setSucessEdit(true);
+      setSuccessMsg("Changes were saved");
       setTimeout(() => {
-        setSucessEdit(false);
+        setSuccessMsg("");
       },5000);
     }
   }
 
-  const editInstructor = (i) => {
+  const editMember = (i) => {
     if (i === editIndex){
       setEditIndex(null);
       setEditing("");
       return;
     } 
     setEditIndex(i);
-    setEditing(instructors[i].name)
+    setEditing(kind === "instructor" ? instructors[i].name : students[i].name)
   }
 
-  const deleteInstructor = (i) => {
+  const deleteMember = (i) => {
       if (i === deleteIndex){
         setDeleteIndex(null);
         return;
@@ -142,46 +175,65 @@ const Instructors = () => {
    const executeDelete = async (id) => {
     let request = null;
     try {
-      request = await fetch(`https://localhost:7004/api/instructors/${id}`, {
+      request = await fetch(`https://localhost:7004/api/${kind}s/${id}`, {
         method: "DELETE",
         headers: {
           "Authorization" : `Bearer ${token}`
         }
       });
     } catch(error){
-      alert("Fatal! Error at deleting");
+      alert("Fatal! Error at deleting" + error);
       return;
     }
     if (request.ok) {
-      setInstructors((prevInstructors) => 
-          prevInstructors.filter((instructor) => instructor.id !== id)
+      if (kind === "instructor"){
+        setInstructors((prevInstructors) => 
+            prevInstructors.filter((instructor) => instructor.id !== id)
+        );
+      } else {
+        setStudents((prevStudents) => 
+          prevStudents.filter((student) => student.id !== id)
       );
+      }
+      setSuccessMsg(kind[0].toUpperCase() + kind.slice(1,kind.length) + " was removed");
+      setTimeout(() => {
+        setSuccessMsg("");
+      },5000);
+    } else if (request.status === 400){
+      const response = await request.json();
+      if(response.count){
+        setErrorMsg(`This instructor is currently teaching ${response.count} courses! Please expell first`);
+        setTimeout( () => {
+          setErrorMsg("");
+        }, 5000)
+      }
     }
     setDeleteIndex(null);
+    
   }
   return (
     <div className="context-menu">
       
-      <CommonSideBar choice="instructor"/>
+      <CommonSideBar choice={kind} updater={(kind === "instructor") ? setInstructors : setStudents}/>
       <div>
         <form onSubmit={(e) => search(e)} style={{"marginBottom" : "1rem"}}>
             <input placeholder="Ex. John Doe" className="input-with-side" type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
             <button className="blue-btn side-with-input" type="submit">Search</button>
         </form>
 
-        <h1 className="color-gray">Instructors {searched ? `(Searched: ${searchCapture})` : "" }</h1>
+        <h1 className="color-gray">{kind[0].toUpperCase() + kind.slice(1).toLowerCase()}s {searched ? `(Searched: ${searchCapture})` : "" }</h1>
         {searchCapture && <span style={{color: "rgb(184, 65, 65)", cursor: "pointer"}} onClick={() => clearSearch()}>Clear Search</span>}
         <hr/>
 
-        {successEdit && 
+        {successMsg !== "" && 
           <div style={{marginTop: "1rem"}} className="success-box">
-            <p>Changes were saved!</p>
+            <p>{successMsg}</p>
           </div>
         }
 
-        {failedEdit && 
+        {(errorMsg != "") && 
           <div style={{marginTop: "1rem"}} className="error-box">
-            <p>Name cannot be empty!</p>
+            <p>{errorMsg}</p>
           </div>
         }
 
@@ -192,7 +244,7 @@ const Instructors = () => {
                 <h2>Are you sure you want to delete {instructors[deleteIndex].name}?</h2>
                 <div>
                   <button style={{color: "brown"}} onClick={() => executeDelete(instructors[deleteIndex].id)}>Yes</button>
-                  <button style={{backgroundColor: "brown", border: "1px solid #FFF", color: "#FFF"}} onClick={() => deleteInstructor(deleteIndex)}>No</button>
+                  <button style={{backgroundColor: "brown", border: "1px solid #FFF", color: "#FFF"}} onClick={() => deleteMember(deleteIndex)}>No</button>
                 </div>
               </div>
             ) : (
@@ -211,7 +263,7 @@ const Instructors = () => {
                       />
                     </form>
                   ) : (
-                    <h2>{instructor.name}</h2>
+                    <h2><Link to={`/profile/${instructor.id}`}>{instructor.name}</Link></h2>
                   )}
                   <small style={{ fontSize: "18px" }} className="color-gray">
                     {instructor.email}
@@ -221,14 +273,14 @@ const Instructors = () => {
                   {editIndex === i ? (
                     <button
                       style={{ backgroundColor: "#783600" }}
-                      onClick={() => editInstructor(i)}
+                      onClick={() => editMember(i)}
                     >
                       &#128683;
                     </button>
                   ) : (
                     <button
                       style={{ backgroundColor: "#AA6C39" }}
-                      onClick={() => editInstructor(i)}
+                      onClick={() => editMember(i)}
                     >
                       &#128221;
                     </button>
@@ -243,7 +295,7 @@ const Instructors = () => {
                   ) : (
                     <button
                       style={{ backgroundColor: "brown", color: "#FFF" }}
-                      onClick={() => deleteInstructor(i)}
+                      onClick={() => deleteMember(i)}
                     >
                       &#128465;
                     </button>
@@ -252,7 +304,79 @@ const Instructors = () => {
               </div>
             )
           );
-})}
+
+          
+        })}
+
+        {students && students[0] && students.map((student, i) => {
+          return (
+            deleteIndex === i ? (
+              <div className='delete-box'>
+                <h2>Are you sure you want to delete {students[deleteIndex].name}?</h2>
+                <div>
+                  <button style={{color: "brown"}} onClick={() => executeDelete(students[deleteIndex].id)}>Yes</button>
+                  <button style={{backgroundColor: "brown", border: "1px solid #FFF", color: "#FFF"}} onClick={() => deleteMember(deleteIndex)}>No</button>
+                </div>
+              </div>
+            ) : (
+              <div className="member-item" key={i}>
+                <div>
+                  <span className="member-item-user-logo" style={{ fontSize: "48px", textAlign: "center" }}>&#128100;</span>
+                </div>
+                <div>
+                  {i === editIndex ? (
+                    <form onSubmit={(e) => executeEdit(e, i, student.id)}>
+                      <input
+                        className="inline-input"
+                        type="text"
+                        value={editing}
+                        onChange={(e) => setEditing(e.target.value)}
+                      />
+                    </form>
+                  ) : (
+                    <h2><Link to={`/profile/${student.id}`}>{student.name}</Link></h2>
+                  )}
+                  <small style={{ fontSize: "18px" }} className="color-gray">
+                    {student.email}
+                  </small>
+                </div>
+                <div className="member-item-buttons">
+                  {editIndex === i ? (
+                    <button
+                      style={{ backgroundColor: "#783600" }}
+                      onClick={() => editMember(i)}
+                    >
+                      &#128683;
+                    </button>
+                  ) : (
+                    <button
+                      style={{ backgroundColor: "#AA6C39" }}
+                      onClick={() => editMember(i)}
+                    >
+                      &#128221;
+                    </button>
+                  )}
+                  {editIndex === i ? (
+                    <button
+                      style={{ backgroundColor: "#298D29", color: "#FFF" }}
+                      onClick={(e) => executeEdit(e, i, student.id)}
+                    >
+                      &#10003;
+                    </button>
+                  ) : (
+                    <button
+                      style={{ backgroundColor: "brown", color: "#FFF" }}
+                      onClick={() => deleteMember(i)}
+                    >
+                      &#128465;
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          );
+        })}
+
       </div>
 
     </div>

@@ -37,7 +37,7 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = "Instructor")]
+        [Authorize(Policy = "RequireInstructor")]
         // POST api/assignments -> Creates an assignment
         public async Task<IActionResult> NewAssignment(AddAssignmentDTO assignmentDTO)
         {
@@ -51,13 +51,13 @@ namespace OnlineEducationaAPI.Controllers
                 SubmissionLimit = assignmentDTO.SubmissionLimit,
                 RequiresFileSubmission = assignmentDTO.RequiresFileSubmission
             };
-            await dbcontext.CourseAsssignments.FindAsync(assignment);
+            await dbcontext.CourseAsssignments.AddAsync(assignment);
             await dbcontext.SaveChangesAsync();
             return CreatedAtAction("GetAssignment", new { id = assignment.Id }, assignment);
         }
 
         [HttpPatch]
-        [Authorize(Policy = "Instructor")]
+        [Authorize(Policy = "RequireInstructor")]
         [Route("{id:Guid}")]
         // PATCH api/assignments/0 -> Modifies that assignment
         public async Task<IActionResult> Edit(Guid id, [FromBody] AddAssignmentDTO assignmentDTO)
@@ -77,7 +77,7 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpDelete]
-        [Authorize(Policy = "Instructor")]
+        [Authorize(Policy = "RequireInstructor")]
         [Route("{id:Guid}")]
         // DELETE api/assignments/0 -> Deletes that assignment
         public async Task<IActionResult> Delete(Guid id)
@@ -92,7 +92,7 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "Instructor")]
+        [Authorize(Policy = "RequireInstructor")]
         [Route("submissions/{id:Guid}")]
         // GET api/assignments/submissions/0 -> Returns all submissions and information for a section.
         public async Task<IActionResult> GetAllSubmissions(Guid id)

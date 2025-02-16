@@ -1,0 +1,32 @@
+.section-selector-holder h2{
+    color: brown;
+}
+.section-selector-item{
+    background-color: #FFF;
+    margin-bottom: 1rem;
+    padding: 0.25rem;
+    width:80%;
+}
+.section-selector-item h3:hover{
+    color: rgb(18, 39, 75);
+    text-decoration:underline;
+    cursor:pointer;
+}
+.courses-holder{
+    display:grid;
+    grid-template-columns: 25% 25% 25% 25%;
+}
+.announcement-box{
+    margin: 2rem 0;
+}
+.announcement-box h2{
+    font-size: "22px";
+    color: #3D7E7E;
+}
+.section-item{
+    display:grid;
+    grid-template-columns: 20% 60% 10%;
+    background-color: #FFF;
+    margin: 1rem 0;
+
+}

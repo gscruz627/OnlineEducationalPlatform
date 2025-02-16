@@ -42,9 +42,9 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize (Policy = "Require Admin")]
+        [Authorize (Policy = "RequireAdmin")]
         [Route("register")]
-        // POST api/students -> Register a new student
+        // POST api/students/register -> Register a new student
         public async Task<IActionResult> Register(AddUserDTO studentDTO)
         {
             var studentCheck = await dbcontext.Students.FirstOrDefaultAsync((student) => student.Email == studentDTO.Email);
@@ -62,7 +62,7 @@ namespace OnlineEducationaAPI.Controllers
             };
             await dbcontext.Students.AddAsync(student);
             await dbcontext.SaveChangesAsync();
-            return CreatedAtAction("Get", new { student.Id }, student);
+            return CreatedAtAction("GetStudent", new { student.Id }, new { student.Id, student.Name, student.Email });
         }
 
         [HttpPost]
@@ -97,6 +97,17 @@ namespace OnlineEducationaAPI.Controllers
             );
             var jwt_token = new JwtSecurityTokenHandler().WriteToken(token);
             return Ok(new { Student = new { student.Id, student.Email, student.Name }, Token = jwt_token });
+        }
+
+        [HttpGet]
+        [Authorize(Policy = "RequireAdmin")]
+        [Route("search")]
+        // GET api/students/search?q=searchTerm -> Returns Students similar to 'searchTerm'
+        public async Task<IActionResult> Search([FromQuery] string q)
+        {
+            var results = await dbcontext.Students.Where((student) => student.Name.Contains(q) || student.Email.Contains(q)
+            ).Select((student) => new { student.Id, student.Name, student.Email }).ToListAsync();
+            return Ok(results);
         }
 
         [HttpPatch]

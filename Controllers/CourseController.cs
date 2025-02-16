@@ -23,12 +23,22 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize (Policy = "RequireEither")]
+        [Authorize]
         // GET api/courses -> Returns all courses
         public async Task<IActionResult> GetAll()
         {
             var courses = await dbcontext.Courses.ToListAsync();
             return Ok(courses);
+        }
+        [HttpGet]
+        [Authorize]
+        [Route("search")]
+        // GET api/courses/search?q=searchTerm -> Returns Courses similar to 'searchTerm'
+        public async Task<IActionResult> Search([FromQuery] string q)
+        {
+            var results = await dbcontext.Courses.Where((course) => course.Title.Contains(q) || course.CourseCode.Contains(q)
+            ).ToListAsync();
+            return Ok(results);
         }
 
         [HttpPost]
@@ -84,6 +94,9 @@ namespace OnlineEducationaAPI.Controllers
             {
                 return NotFound();
             }
+
+            // Delete all sections under this CourseID first:
+            await dbcontext.Sections.Where( (section) => section.CourseID == id).ExecuteDeleteAsync();
             dbcontext.Courses.Remove(course);
             await dbcontext.SaveChangesAsync();
             return Ok("Course was Removed");

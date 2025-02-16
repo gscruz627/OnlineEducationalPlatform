@@ -1,22 +1,33 @@
 import React, { useEffect, useState } from 'react'
-import "../public/MyCourses.css"
 import "../src/App.css"
-import "../public/CourseAndSection.css"
+import "./styles/MyCourses.css"
+import "./styles/CourseAndSection.css"
 import { useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 const MyCourses = () => {
+
+  const { kind } = useParams();
+  const role = useSelector( (state) => state.role);
   const [sections, setSections] = useState([]);
   const user = useSelector( (state) => state.user);
   const token = useSelector( (state) => state.token);
   const navigate = useNavigate();
   const loadSections = async () => {
-    const request = await fetch(`https://localhost:7004/api/sections/enrollments/${user.id}`, {
-      method: "GET",
-      headers: {
-        "Authorization" : `Bearer ${token}`,
-      }
-    })
+    const route = (kind === "instructor") ? `https://localhost:7004/api/instructors/sections/${user.id}`
+                  : `https://localhost:7004/api/sections/enrollments/${user.id}`
+    let request = null;
+    try{
+      request = await fetch(route, {
+        method: "GET",
+        headers: {
+          "Authorization" : `Bearer ${token}`,
+        }
+      })
+    } catch(error){
+      alert("Fatal, something wrong happened! Please reload")
+      return;
+    }
     if (request.ok){
       const response = await request.json();
       setSections(response);
@@ -26,15 +37,18 @@ const MyCourses = () => {
     loadSections();
   }, [])
 
+  if (role !== kind){
+    navigate("/404")
+  } 
+
   return (
-    <div>
-        <h1>My Courses</h1>
+    <div style={{fontFamily: "Lisu Bosa"}}>
+        <h1 className='color-gray'>My Courses</h1>
         <hr/>
-        <p>These are active course sections you are taking</p>
-        <div className="courses-holder">
+        <div className="course-card-holder holder-xl">
           {sections && sections.map( (section) => (
-            <div className="course-card" onClick={() => navigate(`/course_view/student/${section.id}`)}>
-            <img src={section.image} />
+            <div className="course-card" onClick={() => navigate(`/course_page/${kind}/${section.id}`)}>
+            <img src={section.imageURL} />
             <div>
               <h2>{section.courseCode} - {section.sectionCode}</h2>
               <p>{section.title}</p>

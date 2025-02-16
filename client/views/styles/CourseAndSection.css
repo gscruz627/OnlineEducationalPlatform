@@ -1,0 +1,114 @@
+.context-menu{
+    font-family: "Lisu Bosa", Times, serif;
+    display:grid;
+    grid-template-columns: 35% 65%;
+    margin-top: 2rem;
+}
+.input-with-side{
+    border: 1px solid #b9b9b9;
+    background-color: #FFF;
+    padding:9px 25px;
+    font-size:22px;
+    outline:none;
+    width:80%;
+}
+.side-with-input{
+    border-top-left-radius:0;
+    border-bottom-left-radius:0;
+    font-size:22px;
+}
+div.context-menu p, div.context-menu label {
+    font-size: 22px;
+}
+div.image-holder{
+    width:100%;
+    margin:20px 0;
+}
+img.image-holder-img{
+    border-radius:20px;
+}
+.course-card-holder{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap:10px;
+    margin:1rem 0;
+}
+.holder-xl{
+    grid-template-columns: repeat(3, 1fr);
+}
+.side-bar{
+    display:flex;
+    flex-direction: column;
+}
+.side-bar ul{
+    list-style:none;
+}
+.side-bar h1{
+    padding-left: 40px;
+}
+.side-bar-item{
+    width:75%;
+    color: #000;
+    padding: 15px 10px;
+    cursor:pointer;
+    border-top: 1px solid gray;
+    font-family: 'Sofia Pro', Arial, sans-serif;
+}
+.side-bar-item:last-child{
+    border-bottom: 1px solid gray;
+}
+.side-bar-item:hover{
+    background-color: #B06C34;
+    color: #FFF;
+    text-decoration: underline;
+    border:none;
+}
+div.course-card{
+    background-color: #FFF;
+    width:100%;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+div.course-card img, .common-image{
+    width:100%;
+    height:150px;
+    object-fit: cover;
+    border-top-left-radius:10px;
+    border-top-right-radius:10px;
+}
+div.course-card > div{
+    padding:5px 10px;
+}
+
+@media screen and (max-width: 768px){
+    .context-menu{
+        display:block;
+    }
+    .context-menu .form-container{
+        justify-content: center;
+        margin: auto auto;
+    }
+    .input-with-side{
+        width:100%;
+    }
+    .side-with-input{
+        border-top-right-radius: 0;
+        margin:1rem 0;
+        border-bottom-right-radius: 0;
+    }
+    .course-card-holder{
+        grid-template-columns: 1fr;
+        row-gap:30px;
+    }
+    .holder-xl{
+        grid-template-columns: 1fr;
+    }
+    .resize-row{
+        flex-direction: column !important;
+    }
+    .side-bar h1{
+        text-align: center;
+        padding: 0;
+    }
+}

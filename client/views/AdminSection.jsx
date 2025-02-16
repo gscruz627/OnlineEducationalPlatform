@@ -1,216 +1,393 @@
-import React, { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
-import { useNavigate, useParams } from 'react-router-dom'
-import CommonSideBar from '../components/CommonSideBar'
-import "../public/Instructors.css"
-import "../public/CourseAndSection.css"
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import "../src/App.css";
+import "./styles/Instructors.css";
+import "./styles/CourseAndSection.css";
 
 const Section = () => {
+  const { sectionId } = useParams();
+  const token = useSelector((state) => state.token);
+  const navigate = useNavigate();
 
-    const {sectionId} = useParams()
+  const [section, setSection] = useState("");
+  const [sectionCode, setSectionCode] = useState("");
+  const [instructorId, setInstructorId] = useState("");
+  const [students, setStudents] = useState("");
+  const [instructors, setInstructors] = useState(null);
 
-    const token = useSelector( (state) => state.token)
-    const navigate = useNavigate();
-    const [course, setCourse] = useState("");
-    const [section, setSection] = useState("");
-    const [changeSectionCode, setChangeSectionCode] = useState("");
-    const [changeInstructorId, setChangeInstructorId] = useState("");
-    const [students, setStudents] = useState("");
-    const [instructors, setInstructors] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [confirmActive, setConfirmActive] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [expellIndex, setExpellIndex] = useState(null);
 
-    const loadSectionInfo = async() => {
-        const request = await fetch(`https://localhost:7004/api/sections/${sectionId}`, {
-            method: "GET",
-            headers: {
-                "Authorization" : `Bearer ${token}`
-            }
-        })
-        if (request.status === 404){
-            console.log(request.status)
-            navigate("/NotFound");
-            return;
+  const [errorExpell, setErrorExpell] = useState("");
+  const [successExpell, setSuccessExpell] = useState("");
+
+  const handleFetchError = (error) => {
+    setErrorMessage(error);
+    setTimeout(() => setErrorMessage(""), 5000);
+  };
+
+  const handleFetchSuccess = (success) => {
+    setSuccessMessage(success);
+    setTimeout(() => setSuccessMessage(""), 5000);
+  };
+
+  const loadSectionInfo = async () => {
+    try {
+      const request = await fetch(
+        `https://localhost:7004/api/sections/${sectionId}`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
         }
-        const response = await request.json();
-        setSection(response);
-        setChangeSectionCode(response.sectionCode);
-        setChangeInstructorId(response.instructorID);
-        const courseRequest = await fetch(`https://localhost:7004/api/courses/${response.courseID}`, {
-            method: "GET",
-            headers: {
-                "Authorization" : `Bearer ${token}`
-            }
-        });
-        if (courseRequest.ok){
-            const courseResponse = await courseRequest.json();
-            setCourse(courseResponse);
-        }
-
+      );
+      if (request.status === 404) {
+        navigate("/NotFound");
+        return;
+      }
+      const response = await request.json();
+      setSection(response);
+    } catch (error) {
+      handleFetchError("Something went wrong! Try Again");
     }
+  };
 
-    const loadInstructors = async () => {
-        const request = await fetch("https://localhost:7004/api/instructors", {
-            method: "GET",
-            headers: {
-                "Authorization" : `Bearer ${token}`
-            }
-        });
-        const response = await request.json();
-        if(request.ok){
-            setInstructors(response);
-        }
+  const loadInstructors = async () => {
+    try {
+      const request = await fetch("https://localhost:7004/api/instructors", {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const response = await request.json();
+      if (request.ok) setInstructors(response);
+    } catch (error) {
+      handleFetchError("Failed to load instructors.");
     }
+  };
 
-    useEffect( () => {
-        loadSectionInfo();
-        loadInstructors();
-        loadStudents();
-    }, [])
-
-    useEffect( () => {
-        setChangeInstructorId(section.InstructorID)
-    }, [section])
-
-    const loadStudents = async () => {
-        const request = await fetch(`https://localhost:7004/api/sections/students/${sectionId}`, {
-            method: "GET",
-            headers: {
-                "Authorization" : `Bearer ${token}`,
-            }
-        })
-        const response = await request.json();
-        if (request.ok){
-            setStudents(response)
+  const loadStudents = async () => {
+    try {
+      const request = await fetch(
+        `https://localhost:7004/api/sections/${sectionId}/students`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
         }
+      );
+      const response = await request.json();
+      if (request.ok) setStudents(response);
+    } catch (error) {
+      handleFetchError("Failed to load students.");
     }
+  };
 
-    const edit = async (e) => {
-        e.preventDefault();
-        if(changeSectionCode === section.sectionCode && changeInstructorId === section.InstructorID){
-            return;
-        }
-        const request = await fetch(`https://localhost:7004/api/sections/${sectionId}`, {
-            method: "PATCH",
-            headers: {
-                "Authorization" : `Bearer ${token}`,
-                "Content-Type" : "application/json"
-            },
-            body: JSON.stringify({
-                "sectionCode" : changeSectionCode,
-                "instructorId" : changeInstructorId,
-                "courseId" : section.courseID
-            })
-        });
-        if (request.ok){
-            const response = await request.json();
-            setSection(response);
-            setChangeSectionCode(response.sectionCode);
-            setChangeInstructorId(response.instructorID);
-            alert("Changes were saved!")
-        } else if (request.status === 400){
-            alert("There is a section with that code already!")
-            setChangeSectionCode(section.sectionCode)
-        }
-    }
-    
-    const switchActive = async () => {
-        const confirmed = confirm("Are you sure you want to change the active status of this section? Instructors won't be able to add / access assignments, students won't be able to submit assignments or see announcements")
-        if (!confirmed){
-            return;
-        }
-        const request = await fetch(`https://localhost:7004/api/sections/set_active/${sectionId}`, {
-            method: "PATCH",
-            headers: {
-                "Authorization" : `Bearer ${token}`
-            }
-        })
-        const response = await request.json();
-        if(request.ok){
-            alert("Changed Active Status");
-            setSection(response);
-        }
-    }
+  useEffect(() => {
+    loadSectionInfo();
+    loadInstructors();
+    loadStudents();
+  }, []);
 
-    const deleteSection = async () => {
-        const confirmed = confirm("Are you sure you want to delete this section? All of the students will be expelled as well as the instructor and all of the content (announcements/assignments) in it")
-        if (!confirmed){
-            return;
-        }
-        const request = await fetch(`https://localhost:7004/api/sections/${sectionId}`,  {
-            method: "DELETE",
-            headers: {
-                "Authorization" : `Bearer ${token}`,
-                "Content-Type" : "application/json"
-            }
-        })
-        if(request.ok){
-            alert("Section was removed!")
-            navigate(`/course/${section.courseID}`)
-        }
-    }
+  useEffect(() => {
+    setInstructorId(section.instructorID);
+    setSectionCode(section.sectionCode);
+  }, [section]);
 
-    const executeExpell = async (studentId) => {
-        const request = await fetch(`https://localhost:7004/api/sections/expell`, {
-            method: "PATCH",
-            headers: {
-                "Authorization" : `Bearer ${token}`,
-                "Content-Type" : "application/json"
-            },
-            body: JSON.stringify({
-                "memberId": studentId,
-                "sectionId":sectionId
-            })
-        });
-        if(request.ok){
-            alert("Student was expelled")
-            await loadStudents();
-        }
-    }
-    return (
-        <div className="context-menu">
-        
-            <CommonSideBar choice="course"/>
-            <div>
-                <h1>{course.courseCode} -{section.sectionCode}</h1>
-                <hr/>
-                <p>In this section you can edit the section code and change instructors. You can also expell students from this course, and change active status.
-                <br/>You can use the help menu that will display a sub-menu below it for help in navigating.
-                </p>
-                <form onSubmit={(e) => edit(e)}>
-                    <h1>Edit Information</h1>
-                    <hr/>
-                    <div className="course-edit-form">
-                        <div>
-                            <label for="sectionCode">Section Code:</label><br/>
-                            <input type="number" id="sectionCode" defaultValue={section.sectionCode} onChange={(e) => setChangeSectionCode(e.target.value)} value={changeSectionCode}/><br/>
-                        </div>
-                        <div>
-                        
-                            <label for="s_instructors">Instructor: </label>
-                            <select value={changeInstructorId} onChange={(e) => setChangeInstructorId(e.target.value)}>
-                                {instructors && instructors.map( (instructor) => (
-                                    <option value={instructor.id} key={instructor.id}>{instructor.name}</option>
-                                ))}
-                           </select>
-                        </div>
-                         <button style={{"gridColumnEnd":"2"}} onClick={() => switchActive()} className={ section.isActive ? "red-button" : "blue-button"}>{section.isActive ? "Set Inactive" : "Set Active"}</button>
- 
-                        <button style={{"width":"80%", }}className="red-button" onClick={() => deleteSection()}>DELETE THIS SECTION</button>
-                        <button style={{"gridColumnStart":"1", "gridColumnEnd":"3", "width": "25%", "marginTop":"20px"}}type="submit" className="blue-button">Save Changes</button>
-                    </div>
-                </form>
-                <div className="students-manager">
-                    <h1>Manage Students Enrolled</h1>
-                    <hr/>
-                    {students && students.map( (student) => (
-                        <section className="section-line">
-                            <h3 style={{gridColumnStart: "1", gridColumnEnd: "3"}}>{student.name}</h3>
-                            <button style={{"fontSize":"22px"}} className="red-button" onClick={() => executeExpell(student.id)}>×</button>
-                        </section>
-                    ))}
-                </div>
-            </div>
-        </div>
+  const edit = async (e) => {
+    e.preventDefault();
+    if (
+      sectionCode === section.sectionCode &&
+      instructorId === section.InstructorID
     )
-}
+      return;
+    console.log(section.courseId, section.courseID, sectionCode, instructorId);
 
-export default Section
+    try {
+      const request = await fetch(
+        `https://localhost:7004/api/sections/${sectionId}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            courseId: section.courseId ? section.courseId : section.courseID,
+            sectionCode,
+            instructorId,
+          }),
+        }
+      );
+
+      if (!request.ok) {
+        handleFetchError("There is a section with that code already!");
+        setSectionCode(section.sectionCode);
+        setInstructorId(section.InstructorID);
+        return;
+      }
+
+      const response = await request.json();
+      setSection(response);
+      setSectionCode(response.sectionCode);
+      setInstructorId(response.instructorID);
+      handleFetchSuccess("Changes were saved!");
+    } catch (error) {
+      handleFetchError("Something went wrong! Try Again");
+    }
+  };
+
+  const switchActive = async () => {
+    try {
+      const request = await fetch(
+        `https://localhost:7004/api/sections/${sectionId}/set_active`,
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!request.ok) {
+        handleFetchError("Something wrong happened! Try again");
+        return;
+      }
+
+      const response = await request.json();
+      setSection(response);
+      setConfirmActive(false);
+      handleFetchSuccess("Changes were saved!");
+    } catch (error) {
+      handleFetchError("Something wrong happened! Try again");
+    }
+  };
+
+  const deleteSection = async () => {
+    try {
+      const request = await fetch(
+        `https://localhost:7004/api/sections/${sectionId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (request.ok) {
+        handleFetchSuccess(
+          "Section was removed! You will be redirected in 5 seconds"
+        );
+        setTimeout(() => {
+          navigate(
+            `/admin_individual_course/${
+              section.courseID ? section.courseID : section.courseId
+            }`
+          );
+        }, 5000);
+      }
+    } catch (error) {
+      handleFetchError("Something wrong happened! Try again");
+    }
+  };
+
+  const executeExpell = async (studentId) => {
+    try {
+      const request = await fetch(
+        `https://localhost:7004/api/sections/expell`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            memberId: studentId,
+            sectionId,
+          }),
+        }
+      );
+
+      if (request.ok) {
+        setSuccessExpell("Student was expelled successfully");
+        setStudents((prevStudents) =>
+          prevStudents.filter((student) => student.id !== studentId)
+        );
+        setTimeout(() => setSuccessExpell(""), 5000);
+      }
+    } catch (error) {
+      setErrorExpell("Something wrong happened! Try again");
+      setTimeout(() => setErrorExpell(""), 5000);
+    }
+  };
+
+  return (
+    <div className="context-menu">
+      <form className="form-container" onSubmit={edit}>
+        <Link to={`/admin_individual_course/${section.courseID}`}>
+          Back to: "{section.title}"
+        </Link>
+        <h1>Edit Section</h1>
+        {errorMessage && (
+          <div style={{ width: "75%" }} className="error-box">
+            {errorMessage}
+          </div>
+        )}
+        {successMessage && (
+          <div style={{ width: "75%" }} className="success-box">
+            {successMessage}
+          </div>
+        )}
+
+        <label htmlFor="c_code">Section Code: </label>
+        <input
+          placeholder="Ex. 1"
+          id="c_code"
+          type="number"
+          onChange={(e) => setSectionCode(e.target.value)}
+          value={sectionCode}
+        />
+
+        <label htmlFor="c_instructor">Instructor: </label>
+        <select
+          id="c_instructor"
+          value={instructorId}
+          onChange={(e) => setInstructorId(e.target.value)}
+        >
+          {instructors &&
+            instructors.map((instructor, i) => (
+              <option key={i} value={instructor.id}>
+                {instructor.name}
+              </option>
+            ))}
+        </select>
+
+        <a
+          onClick={() => setConfirmActive(true)}
+          style={{
+            cursor: "pointer",
+            fontWeight: "bolder",
+            color: section.isActive ? "brown" : "#298D29",
+            marginTop: "1rem",
+            fontSize: "22px",
+            textDecoration: "underline",
+          }}
+        >
+          Set to {section.isActive ? "Inactive" : "Active"}
+        </a>
+
+        {confirmActive && (
+          <div style={{ width: "75%", textAlign: "center", marginBottom: 0 }}>
+            <p>
+              Are you sure you want to change this section's active status?
+              Students and staff will be unable to view announcements or
+              assignments.
+            </p>
+            <button onClick={switchActive}>Yes</button>
+            <button onClick={() => setConfirmActive(false)}>Cancel</button>
+          </div>
+        )}
+
+        <button style={{ width: "75%" }} className="red-btn" type="submit">
+          Save
+        </button>
+
+        <a
+          onClick={() => setConfirmDelete(true)}
+          style={{
+            cursor: "pointer",
+            fontWeight: "bolder",
+            color: "brown",
+            marginBottom: "1rem",
+            fontSize: "22px",
+            textDecoration: "underline",
+          }}
+        >
+          Delete this section
+        </a>
+
+        {confirmDelete && (
+          <div style={{ width: "75%", textAlign: "center", marginBottom: 0 }}>
+            <p>
+              Are you sure you want to delete this section? All enrollments will
+              be dropped and access will no longer be possible?
+            </p>
+            <button onClick={deleteSection}>Yes</button>
+            <button onClick={() => setConfirmDelete(false)}>Cancel</button>
+          </div>
+        )}
+      </form>
+
+      <div>
+        <h1 style={{ textAlign: "center" }}>
+          {section.courseCode} -{section.sectionCode}
+        </h1>
+        <h1 className="color-gray">Students Enrolled</h1>
+        <hr />
+        {errorExpell && <div className="error-box">{errorExpell}</div>}
+        {successExpell && <div className="success-box">{successExpell}</div>}
+
+        {students &&
+          students[0] &&
+          students.map((student, i) =>
+            expellIndex === i ? (
+              <div className="delete-box">
+                <h2>
+                  Are you sure you want to expell {students[expellIndex].name}?
+                </h2>
+                <div>
+                  <button
+                    style={{ color: "brown" }}
+                    onClick={() => executeExpell(students[expellIndex].id)}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    style={{
+                      backgroundColor: "brown",
+                      border: "1px solid #FFF",
+                      color: "#FFF",
+                    }}
+                    onClick={() => setExpellIndex(null)}
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="member-item" key={i}>
+                <div>
+                  <span
+                    className="member-item-user-logo"
+                    style={{ fontSize: "48px", textAlign: "center" }}
+                  >
+                    &#128100;
+                  </span>
+                </div>
+                <div>
+                  <h2>
+                    <Link to={`/profile/${student.id}`}>{student.name}</Link>
+                  </h2>
+                </div>
+                <div className="member-item-buttons">
+                  <button
+                    style={{
+                      backgroundColor: "brown",
+                      color: "#FFF",
+                      height: "100%",
+                    }}
+                    onClick={() => setExpellIndex(i)}
+                  >
+                    &#128465;
+                  </button>
+                </div>
+              </div>
+            )
+          )}
+      </div>
+    </div>
+  );
+};
+
+export default Section;
