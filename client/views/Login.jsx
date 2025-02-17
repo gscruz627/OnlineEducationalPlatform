@@ -97,6 +97,19 @@ const Login = () => {
           role: "instructor",
         })
       );
+      const enrollmentsRequest = await fetch(
+        `${SERVER_URL}/api/instructors/sections/${response.instructor.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${response.token}`,
+          },
+        }
+      );
+
+      const enrollmentsResponse = await enrollmentsRequest.json();
+      const sectionIds = enrollmentsResponse.map((e) => e.id);
+      dispatch(setEnrollments({ enrollments: sectionIds }));
       navigate("/");
     } catch (error) {
       setErrorTriggered(true);
