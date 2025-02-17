@@ -22,6 +22,7 @@ import CourseEnrollment from "../views/CourseEnrollment";
 import Assignment from "../views/Assignment";
 import StudentList from "../views/StudentList";
 import MyCourses from "../views/MyCourses";
+import AuthWatcher from "../components/AuthWatcher";
 
 const App = () => {
   const isAuth = useSelector((state) => state.token);
@@ -36,6 +37,7 @@ const App = () => {
     <BrowserRouter>
       <Topbar />
       <Navbar />
+      <AuthWatcher/>
       <div className="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
