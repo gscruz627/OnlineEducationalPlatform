@@ -205,6 +205,12 @@ const Login = () => {
       <button style={{ width: "75%" }} type="submit" className="blue-btn">
         Login
       </button>
+
+      <small>Demo Login Information: <br/> 
+        For Administators: testadmin, pw: test1234
+        For Student: Marcus.Student@someinstitution.com, pw: 12345678
+        For Instructor: John.Doe@someinstitution.com, pw: 12345678
+      </small>
     </form>
   );
 };
