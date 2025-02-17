@@ -11,8 +11,8 @@ const Profile = () => {
   const v_role = useSelector((state) => state.role);
   const [role, setRole] = useState(null);
   const isLocalUser = v_user.id === userId;
-  const navigate = useNavigate();
-  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+  const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
+
 
   const loadUserInformation = async () => {
     let request = null;

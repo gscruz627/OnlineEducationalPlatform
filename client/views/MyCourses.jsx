@@ -12,7 +12,8 @@ const MyCourses = () => {
   const user = useSelector((state) => state.user);
   const token = useSelector((state) => state.token);
   const navigate = useNavigate();
-  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+  const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
+
 
   const loadSections = async () => {
     const route =

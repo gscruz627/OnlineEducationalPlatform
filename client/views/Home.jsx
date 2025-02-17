@@ -9,7 +9,8 @@ const Home = () => {
   const kind = role;
   const user = useSelector((state) => state.user);
   const navigate = useNavigate();
-  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+  const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
+
 
   // Information for Instructor
   const [sections, setSections] = useState([]);

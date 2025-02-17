@@ -13,9 +13,8 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
-  console.log(SERVER_URL);
-  console.log(process.env.REACT_APP_SERVER_URL);
+  const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
+
   const executeLogin = async (e) => {
     e.preventDefault();
     if (loginType === "admin") {

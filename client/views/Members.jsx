@@ -10,7 +10,8 @@ const Instructors = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searched, setSearched] = useState(false);
   const [searchCapture, setSearchCapture] = useState("");
-  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+  const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
+
 
   const [students, setStudents] = useState(null);
 

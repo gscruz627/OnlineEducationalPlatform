@@ -9,7 +9,8 @@ const CoursePage = () => {
   const { kind, sectionId } = useParams();
   const role = useSelector((state) => state.role);
   const enrollments = useSelector((state) => state.enrollments);
-  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+  const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
+
 
   const [section, setSection] = useState(null);
   const [announcementTitle, setAnnouncementTitle] = useState("");

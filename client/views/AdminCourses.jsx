@@ -14,7 +14,8 @@ const AdminCourses = () => {
   const navigate = useNavigate();
   const token = useSelector((state) => state.token);
 
-  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+  const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
+
 
   useEffect(() => {
     getAllCourses();

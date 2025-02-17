@@ -11,7 +11,8 @@ const CourseAssignment = () => {
   const token = useSelector((state) => state.token);
   const enrollments = useSelector((state) => state.enrollments);
   const navigate = useNavigate();
-  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+  const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
+
 
   const [section, setSection] = useState(null);
   const [assignments, setAssignments] = useState(null);

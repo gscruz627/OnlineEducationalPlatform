@@ -10,7 +10,8 @@ const Assignment = () => {
   const role = useSelector((state) => state.role);
   const enrollments = useSelector((state) => state.enrollments);
   const navigate = useNavigate();
-  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+  const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
+
 
   const [section, setSection] = useState(null);
   const [assignment, setAssignment] = useState(null);

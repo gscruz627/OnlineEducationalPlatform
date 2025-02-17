@@ -9,7 +9,8 @@ const Section = () => {
   const { sectionId } = useParams();
   const token = useSelector((state) => state.token);
   const navigate = useNavigate();
-  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+  const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
+
 
   const [section, setSection] = useState("");
   const [sectionCode, setSectionCode] = useState("");

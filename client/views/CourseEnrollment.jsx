@@ -16,7 +16,8 @@ const CourseEnrollment = () => {
   const [enrollmentError, setEnrollmentError] = useState("");
   const [enrollmentSuccess, setEnrollmentSuccess] = useState("");
 
-  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+  const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
+
 
   const user = useSelector((state) => state.user);
   const token = useSelector((state) => state.token);
