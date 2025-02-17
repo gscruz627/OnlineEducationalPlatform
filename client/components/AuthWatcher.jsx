@@ -4,7 +4,7 @@ import { setLogout } from '../store';
 
 const AuthWatcher = () => {
     const dispatch = useDispatch();
-    const token = useSelector((state) => state.auth.token);
+    const token = useSelector((state) => state.token);
 
     useEffect(() => {
         if (!token) return;
