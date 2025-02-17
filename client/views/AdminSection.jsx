@@ -9,6 +9,7 @@ const Section = () => {
   const { sectionId } = useParams();
   const token = useSelector((state) => state.token);
   const navigate = useNavigate();
+  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 
   const [section, setSection] = useState("");
   const [sectionCode, setSectionCode] = useState("");
@@ -38,7 +39,7 @@ const Section = () => {
   const loadSectionInfo = async () => {
     try {
       const request = await fetch(
-        `https://localhost:7004/api/sections/${sectionId}`,
+        `${SERVER_URL}/api/sections/${sectionId}`,
         {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
@@ -57,7 +58,7 @@ const Section = () => {
 
   const loadInstructors = async () => {
     try {
-      const request = await fetch("https://localhost:7004/api/instructors", {
+      const request = await fetch(`${SERVER_URL}/api/instructors`, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -71,7 +72,7 @@ const Section = () => {
   const loadStudents = async () => {
     try {
       const request = await fetch(
-        `https://localhost:7004/api/sections/${sectionId}/students`,
+        `${SERVER_URL}/api/sections/${sectionId}/students`,
         {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
@@ -106,7 +107,7 @@ const Section = () => {
 
     try {
       const request = await fetch(
-        `https://localhost:7004/api/sections/${sectionId}`,
+        `${SERVER_URL}/api/sections/${sectionId}`,
         {
           method: "PATCH",
           headers: {
@@ -141,7 +142,7 @@ const Section = () => {
   const switchActive = async () => {
     try {
       const request = await fetch(
-        `https://localhost:7004/api/sections/${sectionId}/set_active`,
+        `${SERVER_URL}/api/sections/${sectionId}/set_active`,
         {
           method: "PATCH",
           headers: { Authorization: `Bearer ${token}` },
@@ -165,7 +166,7 @@ const Section = () => {
   const deleteSection = async () => {
     try {
       const request = await fetch(
-        `https://localhost:7004/api/sections/${sectionId}`,
+        `${SERVER_URL}/api/sections/${sectionId}`,
         {
           method: "DELETE",
           headers: {
@@ -195,7 +196,7 @@ const Section = () => {
   const executeExpell = async (studentId) => {
     try {
       const request = await fetch(
-        `https://localhost:7004/api/sections/expell`,
+        `${SERVER_URL}/api/sections/expell`,
         {
           method: "DELETE",
           headers: {

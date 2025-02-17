@@ -12,12 +12,13 @@ const Profile = () => {
   const [role, setRole] = useState(null);
   const isLocalUser = v_user.id === userId;
   const navigate = useNavigate();
+  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 
   const loadUserInformation = async () => {
     let request = null;
     try {
       request = await fetch(
-        `https://localhost:7004/api/authority/user/${userId.toLocaleLowerCase()}`,
+        `${SERVER_URL}/api/authority/user/${userId.toLocaleLowerCase()}`,
         {
           method: "GET",
           headers: {

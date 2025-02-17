@@ -12,11 +12,13 @@ const MyCourses = () => {
   const user = useSelector((state) => state.user);
   const token = useSelector((state) => state.token);
   const navigate = useNavigate();
+  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+
   const loadSections = async () => {
     const route =
       kind === "instructor"
-        ? `https://localhost:7004/api/instructors/sections/${user.id}`
-        : `https://localhost:7004/api/sections/enrollments/${user.id}`;
+        ? `${SERVER_URL}/api/instructors/sections/${user.id}`
+        : `${SERVER_URL}/api/sections/enrollments/${user.id}`;
     let request = null;
     try {
       request = await fetch(route, {

@@ -10,6 +10,7 @@ const Instructors = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searched, setSearched] = useState(false);
   const [searchCapture, setSearchCapture] = useState("");
+  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 
   const [students, setStudents] = useState(null);
 
@@ -36,7 +37,7 @@ const Instructors = () => {
   }, [kind]);
 
   const getAllInstructors = async () => {
-    const request = await fetch("https://localhost:7004/api/instructors", {
+    const request = await fetch(`${SERVER_URL}/api/instructors`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -49,7 +50,7 @@ const Instructors = () => {
   };
 
   const getAllStudents = async () => {
-    const request = await fetch("https://localhost:7004/api/students", {
+    const request = await fetch(`${SERVER_URL}/api/students`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -70,7 +71,7 @@ const Instructors = () => {
     console.log(searchCapture, searched, searchTerm);
 
     const request = await fetch(
-      `https://localhost:7004/api/${kind}s/search?q=${searchTerm}`,
+      `${SERVER_URL}/api/${kind}s/search?q=${searchTerm}`,
       {
         method: "GET",
         headers: {
@@ -116,7 +117,7 @@ const Instructors = () => {
     let request = null;
     try {
       request = await fetch(
-        `https://localhost:7004/api/${kind}s/${
+        `${SERVER_URL}/api/${kind}s/${
           kind === "instructor" ? instructors[i].id : students[i].id
         }`,
         {
@@ -186,7 +187,7 @@ const Instructors = () => {
   const executeDelete = async (id) => {
     let request = null;
     try {
-      request = await fetch(`https://localhost:7004/api/${kind}s/${id}`, {
+      request = await fetch(`${SERVER_URL}/api/${kind}s/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

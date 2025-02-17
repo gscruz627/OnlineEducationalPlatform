@@ -7,6 +7,7 @@ const AdminCourse = () => {
   const { courseId } = useParams();
   const token = useSelector((state) => state.token);
   const navigate = useNavigate();
+  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 
   const [course, setCourse] = useState("");
   const [title, setTitle] = useState("");
@@ -28,7 +29,7 @@ const AdminCourse = () => {
   const loadCourseInfo = async () => {
     try {
       const request = await fetch(
-        `https://localhost:7004/api/courses/${courseId}`,
+        `${SERVER_URL}/api/courses/${courseId}`,
         {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
@@ -59,7 +60,7 @@ const AdminCourse = () => {
   const loadSections = async () => {
     try {
       const request = await fetch(
-        `https://localhost:7004/api/sections/course/${courseId}`,
+        `${SERVER_URL}/api/sections/course/${courseId}`,
         {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
@@ -74,7 +75,7 @@ const AdminCourse = () => {
   };
 
   const loadInstructors = async () => {
-    const request = await fetch("https://localhost:7004/api/instructors", {
+    const request = await fetch(`${SERVER_URL}/api/instructors`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -96,7 +97,7 @@ const AdminCourse = () => {
 
     try {
       const request = await fetch(
-        `https://localhost:7004/api/courses/${courseId}`,
+        `${SERVER_URL}/api/courses/${courseId}`,
         {
           method: "PATCH",
           headers: {
@@ -136,7 +137,7 @@ const AdminCourse = () => {
     }
 
     try {
-      const request = await fetch("https://localhost:7004/api/sections", {
+      const request = await fetch(`${SERVER_URL}/api/sections`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -169,7 +170,7 @@ const AdminCourse = () => {
   const deleteCourse = async () => {
     try {
       const request = await fetch(
-        `https://localhost:7004/api/courses/${courseId}`,
+        `${SERVER_URL}/api/courses/${courseId}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },

@@ -11,6 +11,8 @@ const CourseAssignment = () => {
   const token = useSelector((state) => state.token);
   const enrollments = useSelector((state) => state.enrollments);
   const navigate = useNavigate();
+  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+
   const [section, setSection] = useState(null);
   const [assignments, setAssignments] = useState(null);
   const [assignmentDate, setAssignmentDate] = useState(null);
@@ -25,7 +27,7 @@ const CourseAssignment = () => {
     let request = null;
     try {
       request = await fetch(
-        `https://localhost:7004/api/sections/${sectionId}`,
+        `${SERVER_URL}/api/sections/${sectionId}`,
         {
           method: "GET",
           headers: {
@@ -46,7 +48,7 @@ const CourseAssignment = () => {
   };
   const loadAssignments = async () => {
     const request = await fetch(
-      `https://localhost:7004/api/assignments/sections/${sectionId}`,
+      `${SERVER_URL}/api/assignments/sections/${sectionId}`,
       {
         method: "GET",
         headers: {
@@ -64,7 +66,7 @@ const CourseAssignment = () => {
     e.preventDefault();
     let request = null;
     try {
-      request = await fetch("https://localhost:7004/api/assignments", {
+      request = await fetch(`${SERVER_URL}/api/assignments`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

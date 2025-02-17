@@ -14,12 +14,14 @@ const AdminCourses = () => {
   const navigate = useNavigate();
   const token = useSelector((state) => state.token);
 
+  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+
   useEffect(() => {
     getAllCourses();
   }, []);
 
   const getAllCourses = async () => {
-    const request = await fetch("https://localhost:7004/api/courses", {
+    const request = await fetch(`${SERVER_URL}/api/courses`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -38,7 +40,7 @@ const AdminCourses = () => {
     setSearchCapture(searchTerm);
     try {
       const request = await fetch(
-        `https://localhost:7004/api/courses/search?q=${searchTerm}`,
+        `${SERVER_URL}/api/courses/search?q=${searchTerm}`,
         {
           method: "GET",
           headers: {

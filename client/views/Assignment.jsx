@@ -10,6 +10,7 @@ const Assignment = () => {
   const role = useSelector((state) => state.role);
   const enrollments = useSelector((state) => state.enrollments);
   const navigate = useNavigate();
+  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 
   const [section, setSection] = useState(null);
   const [assignment, setAssignment] = useState(null);
@@ -22,7 +23,7 @@ const Assignment = () => {
   const [assignmentError, setAssignmentError] = useState("");
   const [assignmentSuccess, setAssignmentSucess] = useState("");
   const [submissionOpen, setSubmissionOpen] = useState(false);
-  
+
   // For Student
   const [comment, setComment] = useState("");
   const [filename, setFilename] = useState("");
@@ -31,7 +32,7 @@ const Assignment = () => {
     let request = null;
     try {
       request = await fetch(
-        `https://localhost:7004/api/sections/${sectionId}`,
+        `${SERVER_URL}/api/sections/${sectionId}`,
         {
           method: "GET",
           headers: {
@@ -54,7 +55,7 @@ const Assignment = () => {
     let request = null;
     try {
       request = await fetch(
-        `https://localhost:7004/api/assignments/${assignmentId}`,
+        `${SERVER_URL}/api/assignments/${assignmentId}`,
         {
           method: "GET",
           headers: {
@@ -78,8 +79,8 @@ const Assignment = () => {
     }
     const route =
       kind === "instructor"
-        ? `https://localhost:7004/api/assignments/submissions/${assignmentId}`
-        : `https://localhost:7004/api/assignments/submissions_student?studentId=${user.id}&assignmentId=${assignmentId}`;
+        ? `${SERVER_URL}/api/assignments/submissions/${assignmentId}`
+        : `${SERVER_URL}/api/assignments/submissions_student?studentId=${user.id}&assignmentId=${assignmentId}`;
     const submissionsRequest = await fetch(route, {
       method: "GET",
       headers: {
@@ -97,7 +98,7 @@ const Assignment = () => {
     let request = null;
     try {
       request = await fetch(
-        `https://localhost:7004/api/assignments/${assignment.id}`,
+        `${SERVER_URL}/api/assignments/${assignment.id}`,
         {
           method: "PATCH",
           headers: {
@@ -154,7 +155,7 @@ const Assignment = () => {
     }
     let request = null;
     try {
-      request = await fetch(`https://localhost:7004/api/assignments/submit`, {
+      request = await fetch(`${SERVER_URL}/api/assignments/submit`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

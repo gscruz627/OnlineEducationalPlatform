@@ -16,12 +16,14 @@ const CourseEnrollment = () => {
   const [enrollmentError, setEnrollmentError] = useState("");
   const [enrollmentSuccess, setEnrollmentSuccess] = useState("");
 
+  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+
   const user = useSelector((state) => state.user);
   const token = useSelector((state) => state.token);
   const dispatch = useDispatch();
 
   const getAllCourses = async () => {
-    const request = await fetch("https://localhost:7004/api/courses", {
+    const request = await fetch(`${SERVER_URL}/api/courses`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -41,7 +43,7 @@ const CourseEnrollment = () => {
     setSearchCapture(searchTerm);
 
     const request = await fetch(
-      `https://localhost:7004/api/courses/search?q=${searchTerm}`,
+      `${SERVER_URL}/api/courses/search?q=${searchTerm}`,
       {
         method: "GET",
         headers: {
@@ -62,7 +64,7 @@ const CourseEnrollment = () => {
   };
   const selectCourse = async (course, courseId) => {
     const request = await fetch(
-      `https://localhost:7004/api/sections/course/${courseId}`,
+      `${SERVER_URL}/api/sections/course/${courseId}`,
       {
         method: "GET",
         headers: {
@@ -77,7 +79,7 @@ const CourseEnrollment = () => {
     }
   };
   const loadInstructors = async () => {
-    const request = await fetch("https://localhost:7004/api/instructors", {
+    const request = await fetch(`${SERVER_URL}/api/instructors`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -89,7 +91,7 @@ const CourseEnrollment = () => {
     }
   };
   const executeEnroll = async (sectionId) => {
-    const request = await fetch("https://localhost:7004/api/sections/enroll", {
+    const request = await fetch(`${SERVER_URL}/api/sections/enroll`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -106,7 +108,7 @@ const CourseEnrollment = () => {
         setEnrollmentSuccess("");
       }, 5000);
       const enrollmentsRequest = await fetch(
-        `https://localhost:7004/api/sections/enrollments/${user.id}`,
+        `${SERVER_URL}/api/sections/enrollments/${user.id}`,
         {
           method: "GET",
           headers: {

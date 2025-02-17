@@ -18,6 +18,12 @@ namespace OnlineEducationaAPI.Controllers
         private readonly ApplicationDBContext dbcontext = dbcontext;
         private readonly IConfiguration configuration = configuration;
 
+        [HttpGet]
+        [Route("/")]
+        public String Test()
+        {
+            return "Hi";
+        }
         [HttpPost]
         [Route("register")]
         // GET api/authority/register -> Register a new administration.

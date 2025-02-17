@@ -13,6 +13,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 
   const executeLogin = async (e) => {
     e.preventDefault();
@@ -34,7 +35,7 @@ const Login = () => {
   };
   const loginStudent = async () => {
     try {
-      const request = await fetch("https://localhost:7004/api/students/login", {
+      const request = await fetch(`${SERVER_URL}/api/students/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email, password: password }),
@@ -54,7 +55,7 @@ const Login = () => {
       );
 
       const enrollmentsRequest = await fetch(
-        `https://localhost:7004/api/sections/enrollments/${response.student.id}`,
+        `${SERVER_URL}/api/sections/enrollments/${response.student.id}`,
         {
           method: "GET",
           headers: {
@@ -76,7 +77,7 @@ const Login = () => {
   const loginInstructor = async () => {
     try {
       const request = await fetch(
-        "https://localhost:7004/api/instructors/login",
+        `${SERVER_URL}/api/instructors/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -106,7 +107,7 @@ const Login = () => {
   const loginAdministrator = async () => {
     try {
       const request = await fetch(
-        "https://localhost:7004/api/authority/login",
+        `${SERVER_URL}/api/authority/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -11,12 +11,13 @@ const StudentList = () => {
   const [instructor, setInstructor] = useState(null);
   const token = useSelector((state) => state.token);
   const navigate = useNavigate();
+  const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 
   const loadSectionInformation = async () => {
     let request = null;
     try {
       request = await fetch(
-        `https://localhost:7004/api/sections/${sectionId}`,
+        `${SERVER_URL}/api/sections/${sectionId}`,
         {
           method: "GET",
           headers: {
@@ -38,7 +39,7 @@ const StudentList = () => {
     let instructorRequest = null;
     try {
       instructorRequest = await fetch(
-        `https://localhost:7004/api/instructors/${response.instructorID}`,
+        `${SERVER_URL}/api/instructors/${response.instructorID}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -58,7 +59,7 @@ const StudentList = () => {
   };
   const loadStudentsEnrolled = async () => {
     const request = await fetch(
-      `https://localhost:7004/api/sections/${sectionId}/students`,
+      `${SERVER_URL}/api/sections/${sectionId}/students`,
       {
         method: "GET",
         headers: {
