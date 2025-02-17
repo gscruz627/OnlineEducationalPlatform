@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { setLogout } from '../redux/authSlice';
+import { setLogout } from '../store';
 
 const AuthWatcher = () => {
     const dispatch = useDispatch();
