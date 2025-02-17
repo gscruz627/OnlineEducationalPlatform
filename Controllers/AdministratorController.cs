@@ -24,18 +24,19 @@ namespace OnlineEducationaAPI.Controllers
         {
             return "Hi";
         }
+
+        [HttpGet]
+        [Route("boy")]
+        public IActionResult Test2()
+        {
+            return Ok("hihiHI");
+        }
+
         [HttpPost]
         [Route("register")]
         // GET api/authority/register -> Register a new administration.
         public async Task<IActionResult> Register(AdministratorDTO adminDTO)
         {
-
-            var checkAdmin = await dbcontext.Administrators.FirstOrDefaultAsync((admin) => admin.Username == adminDTO.Username);
-            if (checkAdmin is not null)
-            {
-                return Unauthorized();
-            }
-            
             var hasher = new PasswordHasher<Administrator>();
             var admin = new Administrator()
             {
@@ -64,13 +65,15 @@ namespace OnlineEducationaAPI.Controllers
             {
                 return Unauthorized();
             }
-            var key = configuration["jwt:secret_key"];
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+            var SECRET_KEY = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SECRET_KEY));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             List<Claim> claims = [];
             claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
             claims.Add(new Claim(JwtRegisteredClaimNames.Sub, admin.Id.ToString()));
+            claims.Add(new Claim(JwtRegisteredClaimNames.Iss, Environment.GetEnvironmentVariable("JWT_ISSUER")));
+            claims.Add(new Claim(JwtRegisteredClaimNames.Aud, Environment.GetEnvironmentVariable("JWT_AUDIENCE")));
 
             var token = new JwtSecurityToken(
                     claims: claims,

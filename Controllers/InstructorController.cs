@@ -92,12 +92,14 @@ namespace OnlineEducationaAPI.Controllers
             }
 
             // At this point, the instructor is authorized and a JWT will be generated
-            var SECRET_KEY = configuration["jwt:secret_key"];
+            var SECRET_KEY = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SECRET_KEY));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var claims = new List<Claim>();
             claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
             claims.Add(new Claim(JwtRegisteredClaimNames.Sub, instructor.Id.ToString()));
+            claims.Add(new Claim(JwtRegisteredClaimNames.Iss, Environment.GetEnvironmentVariable("JWT_ISSUER")));
+            claims.Add(new Claim(JwtRegisteredClaimNames.Aud, Environment.GetEnvironmentVariable("JWT_AUDIENCE")));
 
             //Create Security Token object by giving required parameters    
             var token = new JwtSecurityToken(

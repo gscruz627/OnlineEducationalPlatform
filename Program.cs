@@ -105,9 +105,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("https://learn.gustavolacruz.com", "https://gscruz627.bsite.net") // Specify allowed domain
-        .WithMethods("GET", "POST", "PATCH", "DELETE") // Restrict methods
-        .WithHeaders("Authorization", "Content-Type"); // Restrict headers
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod(); // Restrict headers
     });
 });
 
@@ -125,15 +123,7 @@ try
     // Configure the HTTP request pipeline.
     if (!app.Environment.IsDevelopment())
     {
-        app.UseExceptionHandler(errorApp =>
-        {
-            errorApp.Run(async context =>
-            {
-                context.Response.StatusCode = 500; // Internal Server Error
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync("{\"error\": \"An unexpected error occurred.\"}");
-            });
-        });
+        app.UseDeveloperExceptionPage();
     }
 
     app.UseHttpsRedirection();

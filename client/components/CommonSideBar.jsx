@@ -15,6 +15,7 @@ const CommonSideBar = ({ choice, updater }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
 
   const token = useSelector((state) => state.token);
 
@@ -45,7 +46,7 @@ const CommonSideBar = ({ choice, updater }) => {
     }
 
     try {
-      const request = await fetch("https://localhost:7004/api/courses", {
+      const request = await fetch(`${SERVER_URL}/api/courses`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -91,7 +92,7 @@ const CommonSideBar = ({ choice, updater }) => {
     }
 
     try {
-      const request = await fetch(`https://localhost:7004/api/${choice}s/register`, {
+      const request = await fetch(`${SERVER_URL}/api/${choice}s/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

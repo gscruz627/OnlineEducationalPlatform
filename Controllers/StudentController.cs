@@ -82,13 +82,15 @@ namespace OnlineEducationaAPI.Controllers
                 return Unauthorized();
             }
 
-            var key = configuration["jwt:secret_key"];
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+            var SECRET_KEY = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SECRET_KEY));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             List<Claim> claims = [];
             claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
             claims.Add(new Claim(JwtRegisteredClaimNames.Sub, student.Id.ToString()));
+            claims.Add(new Claim(JwtRegisteredClaimNames.Iss, Environment.GetEnvironmentVariable("JWT_ISSUER")));
+            claims.Add(new Claim(JwtRegisteredClaimNames.Aud, Environment.GetEnvironmentVariable("JWT_AUDIENCE")));
 
             var token = new JwtSecurityToken(
                     claims: claims,
