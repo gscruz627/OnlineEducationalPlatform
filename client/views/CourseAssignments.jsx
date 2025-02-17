@@ -294,8 +294,7 @@ const CourseAssignment = () => {
               }}
             >
               <p
-                style={{ fontSize: "22px" }}
-                className="blinking-blue"
+                style={{ fontSize: "22px", cursor: "pointer" }}
                 onClick={() =>
                   navigate(
                     `/course_page/${kind}/${sectionId}/assignments/${assignment.id}`
