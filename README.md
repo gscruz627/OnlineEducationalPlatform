@@ -6,13 +6,16 @@ and delete courses, course sections, students, and instructors. Students can reg
 Instructors can post announcement per class, assignments, which can be active or not, and other functionalities.
 
 ## Images
-![Image showing Students]()
+![Image showing Students](https://github.com/gscruz627/OnlineEducationalPlatform/blob/master/images/students.png)
 This image shows the administrator view on managing students
-![Image showing The Home Page]()
-This ismage shows the home page view of a student
-![Image showing Enrollments]()
+
+![Image showing The Home Page](https://github.com/gscruz627/OnlineEducationalPlatform/blob/master/images/homepage.png)
+This image shows the home page view of a student
+
+![Image showing Enrollments](https://github.com/gscruz627/OnlineEducationalPlatform/blob/master/images/enrollment.png)
 This image shows the enrollment page for a student
-![Image showing Announcements]()
+
+![Image showing Announcements](https://github.com/gscruz627/OnlineEducationalPlatform/blob/master/images/announcements.png)
 This image shows the announcement (default) page for a course section.
 
 ## All Functionalities
