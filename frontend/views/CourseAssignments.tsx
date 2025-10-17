@@ -4,12 +4,15 @@ import "../src/App.css";
 import "./styles/MyCourses.css";
 import "./styles/CourseAndSection.css";
 import state from "../store";
+import checkAuth from "../functions";
+import Loading from "../components/Loading";
 
 const CourseAssignment = () => {
   const { kind, sectionId } = useParams();
   const navigate = useNavigate();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
 
+  const [loading, setLoading] = useState<boolean>(false);
   const [section, setSection] = useState<any>(null);
   const [assignments, setAssignments] = useState<Array<any>>([]);
   const [assignmentDate, setAssignmentDate] = useState<string>("");
@@ -21,8 +24,10 @@ const CourseAssignment = () => {
   const [assignmentSuccess, setAssignmentSucess] = useState("");
 
   const loadSectionInformation = async () => {
+    setLoading(true);
     let request = null;
     try {
+      await checkAuth(navigate);
       request = await fetch(
         `${SERVER_URL}/api/sections/${sectionId}`,
         {
@@ -32,37 +37,50 @@ const CourseAssignment = () => {
           },
         }
       );
+      if (!request.ok) {
+        alert("Fatal Error, please reload");
+        return;
+      }
+      const response = await request.json();
+      setSection(response);
     } catch (error) {
       alert("Fatal Error, please reload");
       return;
+    } finally {
+      setLoading(false);
     }
-    if (!request.ok) {
-      alert("Fatal Error, please reload");
-      return;
-    }
-    const response = await request.json();
-    setSection(response);
   };
   const loadAssignments = async () => {
-    const request = await fetch(
-      `${SERVER_URL}/api/assignments?sectionId=${sectionId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${state.token}`,
-        },
+    setLoading(true);
+    try{
+      await checkAuth(navigate);
+      const request = await fetch(
+        `${SERVER_URL}/api/assignments?sectionId=${sectionId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${state.token}`,
+          },
+        }
+      );
+      if (request.ok) {
+        const response = await request.json();
+        setAssignments(response);
       }
-    );
-    if (request.ok) {
-      const response = await request.json();
-      setAssignments(response);
+    } catch(err: unknown){
+      alert("Fatal Error, please reload");
+      return;
+    } finally {
+      setLoading(false);
     }
   };
 
   const createAssignment = async (e: React.FormEvent) => {
+    setLoading(true);
     e.preventDefault();
     let request = null;
     try {
+      await checkAuth(navigate);
       request = await fetch(`${SERVER_URL}/api/assignments`, {
         method: "POST",
         headers: {
@@ -79,31 +97,33 @@ const CourseAssignment = () => {
           requiresFileSubmission: assignmentRequiresFile,
         }),
       });
+      if (!request.ok) {
+        setAssignmentError("Something wrong happened! Try again");
+        setTimeout(() => {
+          setAssignmentError("");
+        }, 5000);
+        return;
+      }
+      const response = await request.json();
+      setAssignmentSucess("Assignment was crated!");
+      setTimeout(() => {
+        setAssignmentSucess("");
+      }, 5000);
+      setAssignments([...assignments, response]);
+      setAssignmentDate("");
+      setAssignmentDescription("");
+      setAssignmentLimit(0);
+      setAssignmentName("");
+      setAssignmentRequiresFile(false);
     } catch (error) {
       setAssignmentError("Something wrong happened! Try again");
       setTimeout(() => {
         setAssignmentError("");
       }, 5000);
       return;
+    } finally {
+      setLoading(false);
     }
-    if (!request.ok) {
-      setAssignmentError("Something wrong happened! Try again");
-      setTimeout(() => {
-        setAssignmentError("");
-      }, 5000);
-      return;
-    }
-    const response = await request.json();
-    setAssignmentSucess("Assignment was crated!");
-    setTimeout(() => {
-      setAssignmentSucess("");
-    }, 5000);
-    setAssignments([...assignments, response]);
-    setAssignmentDate("");
-    setAssignmentDescription("");
-    setAssignmentLimit(0);
-    setAssignmentName("");
-    setAssignmentRequiresFile(false);
   };
   useEffect(() => {
     loadSectionInformation();
@@ -111,6 +131,8 @@ const CourseAssignment = () => {
   }, []);
 
   return (
+    <>
+    {loading && <Loading/> }
     <div className="context-menu">
       <div className="side-bar">
         <h1>{section && `${section.course?.courseCode} - ${section.sectionCode}`}</h1>
@@ -261,7 +283,7 @@ const CourseAssignment = () => {
                     height: "24px",
                     cursor: "pointer",
                   }}
-                />
+                  />
               </label>
 
               <button type="submit" className="blue-btn">
@@ -298,11 +320,11 @@ const CourseAssignment = () => {
                   style={{
                     display: "inline",
                     color:
-                      new Date() > new Date(assignment.dueDate)
-                        ? "red"
-                        : "black",
+                    new Date() > new Date(assignment.dueDate)
+                    ? "red"
+                    : "black",
                   }}
-                >
+                  >
                   Due on{" "}
                   {new Intl.DateTimeFormat("en-US", {
                     month: "short",
@@ -315,6 +337,7 @@ const CourseAssignment = () => {
           ))}
       </div>
     </div>
+  </>
   );
 };
 

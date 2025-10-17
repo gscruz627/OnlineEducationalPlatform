@@ -4,6 +4,7 @@ import "../src/App.css";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import state from "../store";
+import Loading from "../components/Loading";
 
 const Login = () => {
 
@@ -12,10 +13,12 @@ const Login = () => {
   const [loginType, setLoginType] = useState("student");
   const [error, setError] = useState<string>("");
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
 
   async function login(e: React.FormEvent){
+    setLoading(true);
     e.preventDefault();
     try{
       const request = await fetch(`${SERVER_URL}/api/users/login`, {
@@ -56,14 +59,18 @@ const Login = () => {
     } catch(err: unknown){
       setError("Something went wrong: " + err);
       return;
+    } finally {
+      setLoading(false);
     }
   }
   return (
+    <>
+    {loading && <Loading/> }
     <form
       style={{ justifyContent: "center", margin: "auto auto" }}
       className="form-container"
       onSubmit={(e) => login(e)}
-    >
+      >
       <h1>Login</h1>
 
       <div className="form-tab-slide">
@@ -104,7 +111,7 @@ const Login = () => {
             type="email"
             onChange={(e) => setEmail(e.target.value)}
             value={email}
-          ></input>
+            ></input>
         </>
       )}
 
@@ -113,7 +120,7 @@ const Login = () => {
         type="password"
         onChange={(e) => setPassword(e.target.value)}
         value={password}
-      ></input>
+        ></input>
 
       <button style={{ width: "75%" }} type="submit" className="blue-btn">
         Login
@@ -125,6 +132,7 @@ const Login = () => {
         For Instructor: John.Doe@someinstitution.com, pw: 12345678
       </small>
     </form>
+  </>
   );
 };
 

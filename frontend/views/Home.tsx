@@ -3,11 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import "../src/App.css";
 import { useSnapshot } from "valtio";
 import state from "../store";
+import checkAuth from "../functions";
+import Loading from "../components/Loading";
 
 const Home = () => {
   const navigate = useNavigate();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
-
+ 
+  const [loading, setLoading] = useState<boolean>(false);
   const snap = useSnapshot(state);
   // Information for Instructor
   const [sections, setSections] = useState<any>([]);
@@ -24,72 +27,67 @@ const Home = () => {
   }, [sections]);
 
   const loadAnnouncements = async (sectionId:string) => {
-    const request = await fetch(
-      `${SERVER_URL}/api/announcements/section/${sectionId}`,
+    setLoading(true);
+    try{
+
+      await checkAuth(navigate);
+      const request = await fetch(
+      `${SERVER_URL}/api/announcements?sectionId=${sectionId}`,
       {
         method: "GET",
         headers: {
           Authorization: `Bearer ${state.token}`,
         },
       }
-    );
-    if (request.ok) {
-      const response = await request.json();
-      setAnnouncements((prev:any) => ({
-        ...prev,
-        [sectionId]: response, // Store assignments under sectionId
-      }));
+      );
+      if (request.ok) {
+        const response = await request.json();
+        setAnnouncements((prev:any) => ({
+          ...prev,
+          [sectionId]: response, // Store assignments under sectionId
+        }));
+      }
+    } catch(err: unknown){
+      alert("Fatal, something wrong happened! Please reload");
+      return;
+    } finally {
+      setLoading(false);
     }
   };
   const loadSections = async () => {
+    setLoading(true);
     const route =
       snap.role === "instructor"
-        ? `${SERVER_URL}/api/instructors/sections/${snap.user.id}`
-        : `${SERVER_URL}/api/sections/enrollments/${snap.user.id}`;
+        ? `${SERVER_URL}/api/sections?userId=${snap.user.id}`
+        : `${SERVER_URL}/api/sections?userId=${snap.user.id}`;
     let request = null;
     try {
+      await checkAuth(navigate);
       request = await fetch(route, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${state.token}`,
         },
       });
+      if (request.ok) {
+        const response = await request.json();
+        setSections(response);
+      }
     } catch (error) {
       alert("Fatal, something wrong happened! Please reload");
       return;
-    }
-    if (request.ok) {
-      const response = await request.json();
-      setSections(response);
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadAssignments = async (sectionId:string) => {
-    const request = await fetch(
-      `${SERVER_URL}/api/assignments/sections/${sectionId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${state.token}`,
-        },
-      }
-    );
-    if (request.ok) {
-      const response = await request.json();
-      setAssignments((prev:any) => ({
-        ...prev,
-        [sectionId]: response, // Store assignments under sectionId
-      }));
-
-      // Fetch submissions for each assignment
-      response.forEach((assignment:any) => loadSubmissions(assignment.id));
-    }
-  };
-  const loadSubmissions = async (assignmentId:string) => {
-    let request = null;
-    try {
-      request = await fetch(
-        `${SERVER_URL}/api/assignments/submissions/${assignmentId}`,
+    setLoading(true);
+    try{
+      
+      await checkAuth(navigate);
+      const request = await fetch(
+        `${SERVER_URL}/api/assignments?sectionId=${sectionId}`,
         {
           method: "GET",
           headers: {
@@ -97,15 +95,48 @@ const Home = () => {
           },
         }
       );
+      if (request.ok) {
+        const response = await request.json();
+        setAssignments((prev:any) => ({
+          ...prev,
+          [sectionId]: response, // Store assignments under sectionId
+        }));
+  
+        // Fetch submissions for each assignment
+        response.forEach((assignment:any) => loadSubmissions(assignment.id));
+      }
+    } catch(err: unknown){
+      alert("Fatal, something wrong happened! Please reload");
+      return;
+    } finally {
+      setLoading(false);
+    }
+  };
+  const loadSubmissions = async (assignmentId:string) => {
+    setLoading(true);
+    let request = null;
+    try {
+      await checkAuth(navigate);
+      request = await fetch(
+        `${SERVER_URL}/api/assignments/${assignmentId}/submissions`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${state.token}`,
+          },
+        }
+      );
+      const response = await request.json();
+      setSubmissions((prev:any) => ({
+        ...prev,
+        [assignmentId]: response, // Store submissions under assignmentId
+      }));
     } catch (error) {
       alert("Fatal Error, try again!");
       return;
+    } finally {
+      setLoading(false);
     }
-    const response = await request.json();
-    setSubmissions((prev:any) => ({
-      ...prev,
-      [assignmentId]: response, // Store submissions under assignmentId
-    }));
   };
   useEffect(() => {
     console.log(typeof announcements);
@@ -117,6 +148,7 @@ const Home = () => {
   }, []);
   return (
     <>
+      {loading && <Loading /> }
       {!snap.user && (
         <section className="font-formal" style={{ textAlign: "center" }}>
           <h1 className="color-gray" style={{ fontSize: "48px" }}>

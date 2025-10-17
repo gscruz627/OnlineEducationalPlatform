@@ -2,20 +2,25 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import state from "../store";
 import { useSnapshot } from "valtio";
+import checkAuth from "../functions";
+import Loading from "../components/Loading";
 
 const StudentList = () => {
   const { sectionId } = useParams();
   const [section, setSection] = useState<any>(null);
   const [students, setStudents] = useState<Array<any>>([]);
   const [instructor, setInstructor] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
   const snap = useSnapshot(state);
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
 
-
   const loadSectionInformation = async () => {
+
+    setLoading(true);
     let request = null;
     try {
+      await checkAuth(navigate);
       request = await fetch(
         `${SERVER_URL}/api/sections/${sectionId}`,
         {
@@ -25,19 +30,14 @@ const StudentList = () => {
           },
         }
       );
-    } catch (error) {
-      alert("Fatal Error, please reload");
-      return;
-    }
-    if (!request.ok) {
-      alert("Fatal Error, please reload");
-      return;
-    }
-    const response = await request.json();
-    setSection(response);
-
-    let instructorRequest = null;
-    try {
+      if (!request.ok) {
+        alert("Fatal Error, please reload");
+        return;
+      }
+      const response = await request.json();
+      setSection(response);
+  
+      let instructorRequest = null;
       instructorRequest = await fetch(
         `${SERVER_URL}/api/users/${response.instructorID}`,
         {
@@ -46,30 +46,41 @@ const StudentList = () => {
           },
         }
       );
-    } catch (error) {
+      if (!request.ok) {
+        alert("Fatal Error, please reload");
+        return;
+      }
+      const instructorResponse = await instructorRequest.json();
+      setInstructor(instructorResponse);
+    } catch (err: unknown) {
       alert("Fatal Error, please reload");
       return;
+    } finally {
+      setLoading(false);
     }
-    if (!request.ok) {
-      alert("Fatal Error, please reload");
-      return;
-    }
-    const instructorResponse = await instructorRequest.json();
-    setInstructor(instructorResponse);
   };
   const loadStudentsEnrolled = async () => {
-    const request = await fetch(
-      `${SERVER_URL}/api/sections/${sectionId}/students`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${state.token}`,
-        },
+    setLoading(true);
+    try{
+      await checkAuth(navigate);
+      const request = await fetch(
+        `${SERVER_URL}/api/sections/${sectionId}/students`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${state.token}`,
+          },
+        }
+      );
+      if (request.ok) {
+        const response = await request.json();
+        setStudents(response);
       }
-    );
-    if (request.ok) {
-      const response = await request.json();
-      setStudents(response);
+    } catch(err: unknown){
+      alert("Fatal Error, please reload");
+      return;
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
@@ -77,6 +88,8 @@ const StudentList = () => {
     loadStudentsEnrolled();
   }, []);
   return (
+    <>
+    {loading && <Loading/>}
     <div className="context-menu">
       <div className="side-bar">
         <h1>{section && `${section.course?.courseCode} - ${section.sectionCode}`}</h1>
@@ -87,7 +100,7 @@ const StudentList = () => {
             onClick={() => {
               navigate(`/course_page/${snap.user?.role}/${sectionId}/`);
             }}
-          >
+            >
             Announcements
           </li>
           <li
@@ -95,7 +108,7 @@ const StudentList = () => {
             onClick={() => {
               navigate(`/course_page/${snap.user?.role}/${sectionId}/assignments/`);
             }}
-          >
+            >
             Assignments
           </li>
           <li
@@ -103,7 +116,7 @@ const StudentList = () => {
             onClick={() => {
               navigate(`/course_page/${sectionId}/students/`);
             }}
-          >
+            >
             Students
           </li>
         </ul>
@@ -150,6 +163,7 @@ const StudentList = () => {
           ))}
       </div>
     </div>
+  </>
   );
 };
 

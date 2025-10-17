@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./styles/Auth.css";
 import "../src/App.css";
 import { useNavigate } from "react-router-dom";
+import Loading from "../components/Loading";
 
 
 const Register = () => {
@@ -12,10 +13,12 @@ const Register = () => {
   const [loginType, setLoginType] = useState("student");
   const [error, setError] = useState<string>("");
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
 
   async function register(e: React.FormEvent){
+    setLoading(true);
     e.preventDefault();
     try{
       const request = await fetch(`${SERVER_URL}/api/users`, {
@@ -36,17 +39,18 @@ const Register = () => {
     } catch(err: unknown){
       setError("Something went wrong: " + err);
       return;
+    } finally {
+      setLoading(false);
     }
   }
-  useEffect( () => {
-
-  }, [email, username, password, passwordCheck])
   return (
+    <>
+    {loading && <Loading/>}
     <form
       style={{ justifyContent: "center", margin: "auto auto" }}
       className="form-container"
       onSubmit={(e) => register(e)}
-    >
+      >
       <h1>Register</h1>
 
       <div className="form-tab-slide">
@@ -78,7 +82,7 @@ const Register = () => {
             type="text"
             onChange={(e) => setUsername(e.target.value)}
             value={username}
-          ></input>
+            ></input>
         </>
       ) : (
         <>
@@ -96,13 +100,14 @@ const Register = () => {
         type="password"
         onChange={(e) => setPassword(e.target.value)}
         value={password}
-      ></input>
+        ></input>
 
       <button style={{ width: "75%" }} type="submit" className="blue-btn">
         Register
       </button>
 
     </form>
+  </>
   );
 };
 

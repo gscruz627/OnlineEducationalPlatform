@@ -2,127 +2,136 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "../src/App.css";
 import "./styles/MyCourses.css";
+import state from "../store";
+import { useSnapshot } from "valtio";
+import checkAuth from "../functions";
+import Loading from "../components/Loading";
 
 const CourseEnrollment = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searched, setSearched] = useState(false);
-  const [searchCapture, setSearchCapture] = useState("");
-  const [courses, setCourses] = useState(null);
-  const [sections, setSections] = useState(null);
-  const [course, setCourse] = useState(null);
-  const [instructors, setInstructors] = useState(null);
-  const [enrollmentError, setEnrollmentError] = useState("");
-  const [enrollmentSuccess, setEnrollmentSuccess] = useState("");
 
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [courses, setCourses] = useState<Array<any>>([]);
+  const [sections, setSections] = useState<Array<any>>([]);
+  const [course, setCourse] = useState<any>(null);
+  const [instructors, setInstructors] = useState<Array<any>>([]);
+  const [enrollmentError, setEnrollmentError] = useState<string>("");
+  const [enrollmentSuccess, setEnrollmentSuccess] = useState<string>("");
+
+  const snap = useSnapshot(state);
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
-  const user = useSelector((state) => state.user);
-  const token = useSelector((state) => state.token);
 
   const getAllCourses = async () => {
-    const request = await fetch(`${SERVER_URL}/api/courses`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const response = await request.json();
-    if (request.ok) {
-      setCourses(response);
-    }
-  };
-  const search = async (e) => {
-    e.preventDefault();
-    if (searchTerm === "") {
+    setLoading(true);
+    try{
+      await checkAuth(navigate);
+      const request = await fetch(`${SERVER_URL}/api/courses`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${state.token}`,
+        },
+      });
+      const response = await request.json();
+      if (request.ok) {
+        setCourses(response);
+      }
+    } catch(err: unknown){
+      setEnrollmentError("Something went wrong");
       return;
+    } finally {
+      setLoading(false);
     }
-    setSearched(true);
-    setSearchCapture(searchTerm);
+  };
+  const selectCourse = async (course:any, courseId:string) => {
+    setLoading(true);
+    try{
 
-    const request = await fetch(
-      `${SERVER_URL}/api/courses/search?q=${searchTerm}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    const response = await request.json();
-    if (request.ok) {
-      setCourses(response);
-    }
-  };
-  const clearSearch = async () => {
-    setSearched(false);
-    setSearchCapture(null);
-    setSearchTerm("");
-    await getAllCourses();
-  };
-  const selectCourse = async (course, courseId) => {
-    const request = await fetch(
-      `${SERVER_URL}/api/sections/course/${courseId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    const response = await request.json();
-    if (request.ok) {
-      setCourse(course);
-      setSections(response);
-    }
-  };
-  const loadInstructors = async () => {
-    const request = await fetch(`${SERVER_URL}/api/instructors`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const response = await request.json();
-    if (request.ok) {
-      setInstructors(response);
-    }
-  };
-  const executeEnroll = async (sectionId) => {
-    const request = await fetch(`${SERVER_URL}/api/sections/enroll`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        sectionId: sectionId,
-        studentId: user.id,
-      }),
-    });
-    if (request.ok) {
-      setEnrollmentSuccess("You enrolled successfully!");
-      setTimeout(() => {
-        setEnrollmentSuccess("");
-      }, 5000);
-      const enrollmentsRequest = await fetch(
-        `${SERVER_URL}/api/sections/enrollments/${user.id}`,
+      await checkAuth(navigate);
+      const request = await fetch(
+        `${SERVER_URL}/api/sections?courseId=${courseId}`,
         {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${state.token}`,
           },
         }
       );
-
-      const enrollmentsResponse = await enrollmentsRequest.json();
-      const sectionIds = enrollmentsResponse.map((e) => e.id);
-      dispatch(setEnrollments({ enrollments: sectionIds }));
+      const response = await request.json();
+      if (request.ok) {
+        setCourse(course);
+        setSections(response);
+      }
+    } catch(err: unknown){
+      setEnrollmentError("Something went wrong");
       return;
-    } else if (request.status === 400) {
-      setEnrollmentError("You already enrolled in that course");
-      setTimeout(() => {
-        setEnrollmentError("");
-      }, 5000);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const loadInstructors = async () => {
+    setLoading(true);
+    try{
+      await checkAuth(navigate);
+      const request = await fetch(`${SERVER_URL}/api/instructors`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${state.token}`,
+        },
+      });
+      const response = await request.json();
+      if (request.ok) {
+        setInstructors(response);
+      }
+    } catch(err: unknown){
+      setEnrollmentError("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const executeEnroll = async (sectionId:string) => {
+    setLoading(true);
+    try{
+      
+      await checkAuth(navigate);
+      const request = await fetch(`${SERVER_URL}/api/enrollments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${state.token}`,
+        },
+        body: JSON.stringify({
+          sectionId: sectionId,
+          studentId: snap.user?.userId,
+        }),
+      });
+      if (request.ok) {
+        setEnrollmentSuccess("You enrolled successfully!");
+        setTimeout(() => {
+          setEnrollmentSuccess("");
+        }, 5000);
+        const enrollmentsRequest = await fetch(
+          `${SERVER_URL}/api/sections/enrollments/${snap.user?.userId}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${state.token}`,
+            },
+          }
+        );
+        return;
+      } else if (request.status === 400) {
+        setEnrollmentError("You already enrolled in that course");
+        setTimeout(() => {
+          setEnrollmentError("");
+        }, 5000);
+        return;
+      }
+    } catch(err: unknown){
+      setEnrollmentError("Something went wrong");
       return;
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
@@ -130,11 +139,13 @@ const CourseEnrollment = () => {
     loadInstructors();
   }, []);
   return (
+    <>
+    {loading && <Loading/>}
     <div className="context-menu">
       <div className="section-selector-holder" style={{ width: "95%" }}>
         {sections ? (
           <>
-            <h2>Sections for {course.title}</h2>
+            <h2>{course && `Sections for ${course?.title}`}</h2>
             {enrollmentError != "" && (
               <div className="error-box">{enrollmentError}</div>
             )}
@@ -158,7 +169,7 @@ const CourseEnrollment = () => {
                         style={{ cursor: "pointer" }}
                         onClick={() => executeEnroll(section.id)}
                       >
-                        {section.courseCode} - {section.sectionCode}
+                        {section.course?.courseCode} - {section.sectionCode}
                       </h2>
                       <p>
                         <b>By: </b>
@@ -182,7 +193,7 @@ const CourseEnrollment = () => {
       </div>
 
       <div>
-        <form onSubmit={(e) => search(e)} style={{ marginBottom: "1rem" }}>
+        <form onSubmit={(e: React.FormEvent) => e.preventDefault()} style={{ marginBottom: "1rem" }}>
           <input
             placeholder="Ex. MATH101 "
             className="input-with-side"
@@ -196,16 +207,8 @@ const CourseEnrollment = () => {
         </form>
 
         <h1 className="color-gray">
-          Courses Available {searched ? `(Searched: ${searchCapture})` : ""}
+          Courses Available
         </h1>
-        {searchCapture && (
-          <span
-            style={{ color: "rgb(184, 65, 65)", cursor: "pointer" }}
-            onClick={() => clearSearch()}
-          >
-            Clear Search
-          </span>
-        )}
         <hr />
         <p>Select a course and then select a section to enroll.</p>
         <div className="course-card-holder">
@@ -226,6 +229,7 @@ const CourseEnrollment = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

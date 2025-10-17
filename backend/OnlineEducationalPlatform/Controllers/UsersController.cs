@@ -54,7 +54,17 @@ namespace OnlineEducationaAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<UserInfoDTO>> Register(UserDTO userDTO)
         {
-            User? existingUser = await dbcontext.Users.FirstOrDefaultAsync(u => u.Name == userDTO.Name || u.Email == userDTO.Email);
+            User? existingUser;
+            if (userDTO.Role == "admin")
+            {
+                existingUser = await dbcontext.Users
+                    .FirstOrDefaultAsync(u => u.Name == userDTO.Name && u.Role == "admin");
+            }
+            else
+            {
+                existingUser = await dbcontext.Users
+                    .FirstOrDefaultAsync(u => u.Email == userDTO.Email && (u.Role == "student" || u.Role == "instructor"));
+            }
             if (existingUser is not null)
             {
                 return Conflict("There is already a user with that name or email address.");
@@ -106,7 +116,9 @@ namespace OnlineEducationaAPI.Controllers
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
+                TokenExpiryDate = DateTime.UtcNow.AddDays(7)
             };
+
 
             return Ok(tokensDTO);
         }
@@ -135,6 +147,7 @@ namespace OnlineEducationaAPI.Controllers
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
+                TokenExpiryDate = DateTime.UtcNow.AddMinutes(15)
             };
             return Ok(tokensDTO);
         }

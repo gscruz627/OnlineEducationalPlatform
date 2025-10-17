@@ -3,12 +3,16 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import "../src/App.css";
 import state from "../store";
 import { useSnapshot } from "valtio";
+import checkAuth from "../functions";
+import Loading from "../components/Loading";
 
 const Assignment = () => {
   const { kind, sectionId, assignmentId } = useParams();
   const navigate = useNavigate();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
   const snap = useSnapshot(state);
+
+  const [loading, setLoading] = useState<boolean>(false);
 
   const [section, setSection] = useState<any>(null);
   const [assignment, setAssignment] = useState<any>(null);
@@ -27,8 +31,10 @@ const Assignment = () => {
   const [filename, setFilename] = useState("");
 
   const loadSectionInformation = async () => {
+    setLoading(true);
     let request = null;
     try {
+      await checkAuth(navigate);
       request = await fetch(
         `${SERVER_URL}/api/sections/${sectionId}`,
         {
@@ -38,20 +44,24 @@ const Assignment = () => {
           },
         }
       );
+      if (!request.ok) {
+        alert("Fatal Error, please reload");
+        return;
+      }
+      const response = await request.json();
+      setSection(response);
     } catch (error) {
       alert("Fatal Error, please reload");
       return;
+    } finally {
+      setLoading(false);
     }
-    if (!request.ok) {
-      alert("Fatal Error, please reload");
-      return;
-    }
-    const response = await request.json();
-    setSection(response);
   };
   const loadAssignmentInfo = async () => {
+    setLoading(true);
     let request = null;
     try {
+      await checkAuth(navigate);
       request = await fetch(
         `${SERVER_URL}/api/assignments/${assignmentId}`,
         {
@@ -61,40 +71,44 @@ const Assignment = () => {
           },
         }
       );
+      if(request?.ok) {
+        const response = await request.json();
+        setAssignment(response);
+        setAssignmentDate(
+          Intl.DateTimeFormat("en-CA").format(new Date(response.dueDate))
+        );
+        setAssignmentDescription(response.description);
+        setAssignmentLimit(response.submissionLimit);
+        setAssignmentName(response.name);
+        setAssignmentRequiresFile(response.requiresFileSubmission);
+      }
+      const route =
+        kind === "instructor"
+          ? `${SERVER_URL}/api/assignments/submissions?assignmentId=${assignmentId}`
+          : `${SERVER_URL}/api/assignments/${assignmentId}/submissions?studentId=${snap.user?.userId}`;
+      const submissionsRequest = await fetch(route, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${state.token}`,
+        },
+      });
+      if (submissionsRequest.ok) {
+        const submissionsResponse = await submissionsRequest.json();
+        setSubmissions(submissionsResponse);
+      }
     } catch (error) {
       alert("Fatal error, please reload");
-    }
-    if(request?.ok) {
-      const response = await request.json();
-      setAssignment(response);
-      setAssignmentDate(
-        Intl.DateTimeFormat("en-CA").format(new Date(response.dueDate))
-      );
-      setAssignmentDescription(response.description);
-      setAssignmentLimit(response.submissionLimit);
-      setAssignmentName(response.name);
-      setAssignmentRequiresFile(response.requiresFileSubmission);
-    }
-    const route =
-      kind === "instructor"
-        ? `${SERVER_URL}/api/assignments/submissions?assignmentId=${assignmentId}`
-        : `${SERVER_URL}/api/assignments/submissions?studentId=${snap.user?.userId}&assignmentId=${assignmentId}`;
-    const submissionsRequest = await fetch(route, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${state.token}`,
-      },
-    });
-    if (submissionsRequest.ok) {
-      const submissionsResponse = await submissionsRequest.json();
-      setSubmissions(submissionsResponse);
+    } finally {
+      setLoading(false);
     }
   };
 
   const editAssignment = async (e: React.FormEvent) => {
+    setLoading(true);
     e.preventDefault();
     let request = null;
     try {
+      await checkAuth(navigate);
       request = await fetch(
         `${SERVER_URL}/api/assignments/${assignment.id}`,
         {
@@ -114,6 +128,21 @@ const Assignment = () => {
           }),
         }
       );
+      if (!request.ok) {
+        setAssignmentError(
+          "Something wrong happened! Try again! Make sure all fields have valid values"
+        );
+        setTimeout(() => {
+          setAssignmentError("");
+        }, 5000);
+        return;
+      }
+      const response = await request.json();
+      setAssignmentSucess("Changes were saved!");
+      setTimeout(() => {
+        setAssignmentSucess("");
+      }, 5000);
+      setAssignment(response);
     } catch (error) {
       setAssignmentError(
         "Something wrong happened! Try again! Make sure all fields have valid values"
@@ -122,25 +151,13 @@ const Assignment = () => {
         setAssignmentError("");
       }, 5000);
       return;
+    } finally {
+      setLoading(false);
     }
-    if (!request.ok) {
-      setAssignmentError(
-        "Something wrong happened! Try again! Make sure all fields have valid values"
-      );
-      setTimeout(() => {
-        setAssignmentError("");
-      }, 5000);
-      return;
-    }
-    const response = await request.json();
-    setAssignmentSucess("Changes were saved!");
-    setTimeout(() => {
-      setAssignmentSucess("");
-    }, 5000);
-    setAssignment(response);
   };
 
   const executeCreateSubmission = async (e: React.FormEvent) => {
+    setLoading(true);
     e.preventDefault();
     if (new Date(assignment.dueDate) < new Date()) {
       setAssignmentError(
@@ -153,6 +170,7 @@ const Assignment = () => {
     }
     let request = null;
     try {
+      await checkAuth(navigate);
       request = await fetch(`${SERVER_URL}/api/assignments/submit`, {
         method: "POST",
         headers: {
@@ -166,6 +184,24 @@ const Assignment = () => {
           submissionFilename: filename,
         }),
       });
+      if (!request.ok) {
+        setAssignmentError(
+          "Something wrong happened! Make sure you follow correct format!"
+        );
+        setTimeout(() => {
+          setAssignmentError("");
+        }, 5000);
+        return;
+      }
+      const response = await request.json();
+      setSubmissions([...submissions, response]);
+      setAssignmentSucess("Submission has been made!");
+      setTimeout(() => {
+        setAssignmentSucess("");
+      }, 5000);
+      setSubmissionOpen(false);
+      setComment("");
+      setFilename("");
     } catch (error) {
       setAssignmentError(
         "Something wrong happened! Make sure you follow correct format!"
@@ -174,25 +210,9 @@ const Assignment = () => {
         setAssignmentError("");
       }, 5000);
       return;
+    } finally {
+      setLoading(false);
     }
-    if (!request.ok) {
-      setAssignmentError(
-        "Something wrong happened! Make sure you follow correct format!"
-      );
-      setTimeout(() => {
-        setAssignmentError("");
-      }, 5000);
-      return;
-    }
-    const response = await request.json();
-    setSubmissions([...submissions, response]);
-    setAssignmentSucess("Submission has been made!");
-    setTimeout(() => {
-      setAssignmentSucess("");
-    }, 5000);
-    setSubmissionOpen(false);
-    setComment("");
-    setFilename("");
   };
   useEffect(() => {
     loadSectionInformation();
@@ -200,6 +220,8 @@ const Assignment = () => {
   }, []);
 
   return (
+    <>
+    {loading && <Loading/> }
     <div className="context-menu">
       <div className="side-bar">
         <h1>{section && `${section.course?.courseCode} - ${section.sectionCode}`}</h1>
@@ -306,7 +328,7 @@ const Assignment = () => {
                 id="assignment_date"
                 onChange={(e) => setAssignmentDate(e.target.value)}
                 value={assignmentDate!}
-              ></input>
+                ></input>
 
               <label htmlFor="assignment_limit">Submission Limit: </label>
               <input
@@ -334,7 +356,7 @@ const Assignment = () => {
                   alignItems: "center",
                   gap: "10px", // Space between label and checkbox
                 }}
-              >
+                >
                 Requires File Submission:
                 <input
                   type="checkbox"
@@ -369,7 +391,7 @@ const Assignment = () => {
                 color:
                   new Date() >
                   (assignment ? new Date(assignment.dueDate) : new Date())
-                    ? "red"
+                  ? "red"
                     : "black",
               }}
             >
@@ -432,10 +454,10 @@ const Assignment = () => {
               submissions.length < assignment.submissionLimit &&
               new Date(assignment.dueDate) > new Date() && (
                 <button
-                  style={{ margin: "1rem 0" }}
-                  type="button"
-                  className={submissionOpen ? "red-btn" : "blue-btn"}
-                  onClick={() => setSubmissionOpen(!submissionOpen)}
+                style={{ margin: "1rem 0" }}
+                type="button"
+                className={submissionOpen ? "red-btn" : "blue-btn"}
+                onClick={() => setSubmissionOpen(!submissionOpen)}
                 >
                   {submissionOpen ? "Cancel Submission" : "New Submission"}
                 </button>
@@ -478,6 +500,7 @@ const Assignment = () => {
                       }}
                       onChange={(e) => setFilename(e.target.files![0].name)}
                       type="file"
+                      required
                     ></input>
                   </>
                 )}
@@ -495,6 +518,7 @@ const Assignment = () => {
         )}
       </div>
     </div>
+  </>
   );
 };
 

@@ -44,11 +44,14 @@ const Navbar = () => {
 
                 {snap.user ? (
                     <>
-                        <li><Link to={`/profile/${snap.user.id}`}>PROFILE</Link></li>
+                        <li><Link to={`/profile/${snap.user.userId}`}>PROFILE</Link></li>
                         <li><a onClick={() => {handleLogout()}}>SIGN OUT</a></li>
                     </>
                 ) : (
-                    <li><Link to="/login">LOG IN</Link></li>
+                    <>
+                        <li><Link to="/login">LOG IN</Link></li>
+                        <li><Link to="/register">REGISTER</Link></li>
+                    </>
                 )}
             </ul>
         </nav>

@@ -3,13 +3,19 @@ import "../src/App.css";
 import "../views/styles/Instructors.css";
 import "../views/styles/Auth.css";
 import state from "../store";
+import checkAuth from "../functions";
+import { useNavigate } from "react-router-dom";
+import Loading from "./Loading";
 
 const CommonSideBar = ({ choice, updater }: { choice: any; updater: any }) => {
+
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [courseCode, setCourseCode] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const [memberName, setMemberName] = useState("");
   const [email, setEmail] = useState("");
@@ -24,8 +30,9 @@ const CommonSideBar = ({ choice, updater }: { choice: any; updater: any }) => {
     setConfirmPassword("");
   }, [choice]);
 
-  const executeCreate = async (e: React.FormEvent) => {
+  async function executeCreate(e: React.FormEvent){
     e.preventDefault();
+    setLoading(true);
     try {
       if (choice === "course") {
         await executeCreateCourse();
@@ -34,16 +41,19 @@ const CommonSideBar = ({ choice, updater }: { choice: any; updater: any }) => {
       }
     } catch (error) {
       console.error("Error during execution:", error);
+    } finally{
+      setLoading(false);
     }
   };
 
-  const executeCreateCourse = async () => {
+  async function executeCreateCourse(){
     if (!title || !courseCode) {
       displayError("Title and Course Code must have a value.");
       return;
     }
 
     try {
+      await checkAuth(navigate);
       const request = await fetch(`${SERVER_URL}/api/courses`, {
         method: "POST",
         headers: {
@@ -71,7 +81,7 @@ const CommonSideBar = ({ choice, updater }: { choice: any; updater: any }) => {
     }
   };
 
-  const executeCreateMember = async () => {
+  async function executeCreateMember(){
     if (!memberName || !email || !password || !confirmPassword) {
       displayError("Name, Email, and Password must have a value.");
       return;
@@ -90,6 +100,7 @@ const CommonSideBar = ({ choice, updater }: { choice: any; updater: any }) => {
     }
 
     try {
+      await checkAuth(navigate);
       const request = await fetch(`${SERVER_URL}/api/users`, {
         method: "POST",
         headers: {
@@ -129,6 +140,8 @@ const CommonSideBar = ({ choice, updater }: { choice: any; updater: any }) => {
   };
 
   return (
+    <>
+    {loading && <Loading/> }
     <form className="form-container" onSubmit={executeCreate}>
       <h1>
         {choice === "course" && "Create Course"}
@@ -175,6 +188,7 @@ const CommonSideBar = ({ choice, updater }: { choice: any; updater: any }) => {
 
       <button style={{ width: "75%" }} className="red-btn" type="submit">Create</button>
     </form>
+  </>
   );
 };
 

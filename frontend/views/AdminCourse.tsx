@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import "./styles/CourseAndSection.css";
 import state from "../store";
+import checkAuth from "../functions";
+import Loading from "../components/Loading";
 
 const AdminCourse = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
 
-
+  const [loading, setLoading] = useState<boolean>(false);
   const [course, setCourse] = useState<any>("");
   const [title, setTitle] = useState("");
   const [courseCode, setCourseCode] = useState("");
@@ -27,7 +29,9 @@ const AdminCourse = () => {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const loadCourseInfo = async () => {
+    setLoading(true);
     try {
+      await checkAuth(navigate);
       const request = await fetch(
         `${SERVER_URL}/api/courses/${courseId}`,
         {
@@ -54,11 +58,15 @@ const AdminCourse = () => {
     } catch (error) {
       setErrorMessage("Something went wrong! Try Again");
       setTimeout(() => setErrorMessage(""), 5000);
+    } finally{
+      setLoading(false);
     }
   };
 
   const loadSections = async () => {
+    setLoading(true);
     try {
+      await checkAuth(navigate);
       const request = await fetch(
         `${SERVER_URL}/api/sections?courseId=${courseId}`,
         {
@@ -71,22 +79,34 @@ const AdminCourse = () => {
     } catch (error) {
       setErrorMessage("Something went wrong! Try Again");
       setTimeout(() => setErrorMessage(""), 5000);
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadInstructors = async () => {
-    const request = await fetch(`${SERVER_URL}/api/users?role=instructor`, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${state.token}` },
-    });
-    const response = await request.json();
-    if (request.ok) {
-      setInstructors(response);
-      setSelectedInstructor(response[0].id);
+    setLoading(true);
+    try{
+      await checkAuth(navigate);
+      const request = await fetch(`${SERVER_URL}/api/users?role=instructor`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${state.token}` },
+      });
+      const response = await request.json();
+      if (request.ok) {
+        setInstructors(response);
+        setSelectedInstructor(response[0].id);
+      }
+    } catch(err: unknown){
+      setErrorMessage("Something went wrong");
+      setTimeout(() => setErrorMessage(""), 5000);
+    } finally{
+      setLoading(false);
     }
   };
 
   const edit = async (e: React.FormEvent) => {
+    setLoading(true);
     e.preventDefault();
     if (
       title === course.title &&
@@ -96,6 +116,7 @@ const AdminCourse = () => {
       return;
 
     try {
+      await checkAuth(navigate);
       const request = await fetch(
         `${SERVER_URL}/api/courses/${courseId}`,
         {
@@ -125,10 +146,14 @@ const AdminCourse = () => {
     } catch (error) {
       setErrorMessage("Something went wrong! Try Again");
       setTimeout(() => setErrorMessage(""), 5000);
+    } finally {
+      setLoading(false);
     }
   };
 
   const createSection = async (e: React.FormEvent) => {
+    setLoading(true);
+
     e.preventDefault();
     if (!newSectionCode || !selectedInstructor) {
       setSectionError("Section Code and Instructor fields cannot be empty");
@@ -137,6 +162,7 @@ const AdminCourse = () => {
     }
 
     try {
+      await checkAuth(navigate);
       const request = await fetch(`${SERVER_URL}/api/sections`, {
         method: "POST",
         headers: {
@@ -164,11 +190,15 @@ const AdminCourse = () => {
     } catch (error) {
       setSectionError("Something went wrong! Try Again");
       setTimeout(() => setSectionError(""), 5000);
+    } finally{
+      setLoading(false);
     }
   };
 
   const deleteCourse = async () => {
+    setLoading(true);
     try {
+      await checkAuth(navigate);
       const request = await fetch(
         `${SERVER_URL}/api/courses/${courseId}`,
         {
@@ -189,6 +219,8 @@ const AdminCourse = () => {
     } catch (error) {
       setErrorMessage("Something wrong happened! Try Again");
       setTimeout(() => setErrorMessage(""), 5000);
+    } finally{
+      setLoading(false);
     }
   };
 
@@ -197,7 +229,10 @@ const AdminCourse = () => {
     loadSections();
     loadInstructors();
   }, []);
+  
   return (
+    <>
+    {loading && <Loading/>}
     <div className="context-menu">
       <form className="form-container" onSubmit={edit}>
         <Link to="/admin_courses">Back to Courses</Link>
@@ -251,7 +286,7 @@ const AdminCourse = () => {
             fontSize: "22px",
             textDecoration: "underline",
           }}
-        >
+          >
           Delete this Course
         </a>
 
@@ -296,8 +331,8 @@ const AdminCourse = () => {
           >
             {instructors?.map((instructor:any, i:number) => (
               <option
-                style={{
-                  backgroundColor: "#FFF",
+              style={{
+                backgroundColor: "#FFF",
                   color: "#000",
                 }}
                 key={instructor.id}
@@ -312,7 +347,7 @@ const AdminCourse = () => {
             style={{ borderRadius: "0" }}
             type="submit"
             className="red-btn"
-          >
+            >
             +
           </button>
         </form>
@@ -343,6 +378,7 @@ const AdminCourse = () => {
         )}
       </div>
     </div>
+  </>
   );
 };
 

@@ -5,10 +5,13 @@ import state from "../store";
 import { useSnapshot } from "valtio";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import CommonSideBar from "../components/CommonSideBar";
+import checkAuth from "../functions";
+import Loading from "../components/Loading";
 
 const Members = () => {
   const { kind } = useParams();
 
+  const [loading, setLoading] = useState<boolean>(false);
   const snap = useSnapshot(state);
   const [searchTerm, setSearchTerm] = useState("");
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
@@ -40,34 +43,53 @@ const Members = () => {
   }, [kind]);
 
   const getAllInstructors = async () => {
-    const request = await fetch(`${SERVER_URL}/api/users?role=instructor`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${state.token}`,
-      },
-    });
-    const response = await request.json();
-    if (request.ok) {
-      setAllInstructors(response);
-      setInstructors(response);
+    setLoading(true);
+    try{
+      await checkAuth(navigate);
+      const request = await fetch(`${SERVER_URL}/api/users?role=instructor`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${state.token}`,
+        },
+      });
+      const response = await request.json();
+      if (request.ok) {
+        setAllInstructors(response);
+        setInstructors(response);
+      }
+    } catch(err: unknown){
+      setErrorMsg("Something went wrong");
+      return;
+    } finally{
+      setLoading(false);
     }
   };
 
   const getAllStudents = async () => {
-    const request = await fetch(`${SERVER_URL}/api/users?role=student`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${state.token}`,
-      },
-    });
-    const response = await request.json();
-    if (request.ok) {
-      setAllStudents(response);
-      setStudents(response);
+    setLoading(true);
+    try{
+      await checkAuth(navigate);
+      const request = await fetch(`${SERVER_URL}/api/users?role=student`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${state.token}`,
+        },
+      });
+      const response = await request.json();
+      if (request.ok) {
+        setAllStudents(response);
+        setStudents(response);
+      }
+    } catch(err: unknown){
+      setErrorMsg("Something went wrong");
+      return;
+    } finally {
+      setLoading(false);
     }
   };
 
   const executeEdit = async (e: React.FormEvent, i: number, id: string) => {
+    setLoading(true);
     e.preventDefault();
     if (
       (kind === "instructor" &&
@@ -89,6 +111,7 @@ const Members = () => {
     let request = null;
     const selected = (kind === "instructor") ? instructors[i] : students[i];
     try {
+      await checkAuth(navigate);
       request = await fetch(
         `${SERVER_URL}/api/users/${selected.id}`,
         {
@@ -105,17 +128,10 @@ const Members = () => {
           }),
         }
       );
-    } catch (error) {
-      setErrorMsg("Something unexpected happened, Try Again!");
-      setTimeout(() => {
-        setErrorMsg("");
-      }, 5000);
-      return;
-    }
-    if (request.ok) {
-      const response = await request.json();
-      if (kind === "instructor") {
-        setInstructors((prevInstructors) =>
+      if (request.ok) {
+        const response = await request.json();
+        if (kind === "instructor") {
+          setInstructors((prevInstructors) =>
           prevInstructors.map((instructor) => {
             if (instructor.id === id) {
               return response;
@@ -139,6 +155,16 @@ const Members = () => {
       setTimeout(() => {
         setSuccessMsg("");
       }, 5000);
+    } 
+    } catch (error) {
+      setErrorMsg("Something unexpected happened, Try Again!");
+      setTimeout(() => {
+        setErrorMsg("");
+      }, 5000);
+      return;
+    }
+    finally {
+      setLoading(false);
     }
   };
 
@@ -161,46 +187,50 @@ const Members = () => {
   };
 
   const executeDelete = async (id: string) => {
+    setLoading(true);
     let request = null;
     try {
+      await checkAuth(navigate);
       request = await fetch(`${SERVER_URL}/api/users/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${state.token}`,
         },
       });
+      if (request.ok) {
+        if (kind === "instructor") {
+          setInstructors((prevInstructors) =>
+            prevInstructors.filter((instructor) => instructor.id !== id)
+          );
+        } else {
+          setStudents((prevStudents) =>
+            prevStudents.filter((student) => student.id !== id)
+          );
+        }
+        setSuccessMsg(
+          kind![0].toUpperCase() + kind!.slice(1, kind!.length) + " was removed"
+        );
+        setTimeout(() => {
+          setSuccessMsg("");
+        }, 5000);
+      } else if (request.status === 400) {
+        const response = await request.json();
+        if (response.count) {
+          setErrorMsg(
+            `This instructor is currently teaching ${response.count} courses! Please expell first`
+          );
+          setTimeout(() => {
+            setErrorMsg("");
+          }, 5000);
+        }
+      }
+      setDeleteIndex(null);
     } catch (error) {
       alert("Fatal! Error at deleting" + error);
       return;
+    } finally{
+      setLoading(false);
     }
-    if (request.ok) {
-      if (kind === "instructor") {
-        setInstructors((prevInstructors) =>
-          prevInstructors.filter((instructor) => instructor.id !== id)
-        );
-      } else {
-        setStudents((prevStudents) =>
-          prevStudents.filter((student) => student.id !== id)
-        );
-      }
-      setSuccessMsg(
-        kind![0].toUpperCase() + kind!.slice(1, kind!.length) + " was removed"
-      );
-      setTimeout(() => {
-        setSuccessMsg("");
-      }, 5000);
-    } else if (request.status === 400) {
-      const response = await request.json();
-      if (response.count) {
-        setErrorMsg(
-          `This instructor is currently teaching ${response.count} courses! Please expell first`
-        );
-        setTimeout(() => {
-          setErrorMsg("");
-        }, 5000);
-      }
-    }
-    setDeleteIndex(null);
   };
 
 useEffect(() => {
@@ -223,6 +253,8 @@ useEffect(() => {
     }
   }, [searchTerm, allStudents, allInstructors, kind]);
   return (
+    <>
+    {loading && <Loading/>}
     <div className="context-menu">
       <CommonSideBar
         choice={kind}
@@ -322,7 +354,7 @@ useEffect(() => {
                     </button>
                   ) : (
                     <button
-                      style={{ backgroundColor: "#AA6C39" }}
+                    style={{ backgroundColor: "#AA6C39" }}
                       onClick={() => editMember(i)}
                     >
                       &#128221;
@@ -332,14 +364,14 @@ useEffect(() => {
                     <button
                       style={{ backgroundColor: "#298D29", color: "#FFF" }}
                       onClick={(e) => executeEdit(e, i, instructor.id)}
-                    >
+                      >
                       &#10003;
                     </button>
                   ) : (
                     <button
-                      style={{ backgroundColor: "brown", color: "#FFF" }}
+                    style={{ backgroundColor: "brown", color: "#FFF" }}
                       onClick={() => deleteMember(i)}
-                    >
+                      >
                       &#128465;
                     </button>
                   )}
@@ -360,7 +392,7 @@ useEffect(() => {
                   <button
                     style={{ color: "brown" }}
                     onClick={() => executeDelete(students[deleteIndex].id)}
-                  >
+                    >
                     Yes
                   </button>
                   <button
@@ -409,12 +441,12 @@ useEffect(() => {
                     <button
                       style={{ backgroundColor: "#783600" }}
                       onClick={() => editMember(i)}
-                    >
+                      >
                       &#128683;
                     </button>
                   ) : (
                     <button
-                      style={{ backgroundColor: "#AA6C39" }}
+                    style={{ backgroundColor: "#AA6C39" }}
                       onClick={() => editMember(i)}
                     >
                       &#128221;
@@ -424,14 +456,14 @@ useEffect(() => {
                     <button
                       style={{ backgroundColor: "#298D29", color: "#FFF" }}
                       onClick={(e) => executeEdit(e, i, student.id)}
-                    >
+                      >
                       &#10003;
                     </button>
                   ) : (
                     <button
-                      style={{ backgroundColor: "brown", color: "#FFF" }}
+                    style={{ backgroundColor: "brown", color: "#FFF" }}
                       onClick={() => deleteMember(i)}
-                    >
+                      >
                       &#128465;
                     </button>
                   )}
@@ -441,6 +473,7 @@ useEffect(() => {
           })}
       </div>
     </div>
+  </>
   );
 };
 

@@ -76,7 +76,7 @@ namespace OnlineEducationaAPI.Controllers
             {
                 bool exists = await dbcontext.Sections
                     .AnyAsync(s => s.CourseID == sectionDTO.CourseID && s.SectionCode == sectionDTO.SectionCode);
-                if (exists)
+                if (exists && (sectionDTO.SectionCode != section.SectionCode))
                     return BadRequest("A section with that code already exists for the given course.");
             }
 

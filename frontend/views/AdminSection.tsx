@@ -4,6 +4,8 @@ import "../src/App.css";
 import "./styles/Instructors.css";
 import "./styles/CourseAndSection.css";
 import state from "../store";
+import checkAuth from "../functions";
+import Loading from "../components/Loading";
 
 const Section = () => {
 
@@ -16,6 +18,7 @@ const Section = () => {
   const [instructorId, setInstructorId] = useState<string | null>(null);
   const [students, setStudents] = useState<Array<any>>([]);
   const [instructors, setInstructors] = useState<Array<any>>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -37,7 +40,9 @@ const Section = () => {
   };
 
   const loadSectionInfo = async () => {
+    setLoading(true);
     try {
+      await checkAuth(navigate);
       const request = await fetch(
         `${SERVER_URL}/api/sections/${sectionId}`,
         {
@@ -53,11 +58,15 @@ const Section = () => {
       setSection(response);
     } catch (error) {
       handleFetchError("Something went wrong! Try Again");
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadInstructors = async () => {
+    setLoading(true)
     try {
+      await checkAuth(navigate);
       const request = await fetch(`${SERVER_URL}/api/users?role=instructor`, {
         method: "GET",
         headers: { Authorization: `Bearer ${state.token}` },
@@ -66,11 +75,15 @@ const Section = () => {
       if (request.ok) setInstructors(response);
     } catch (error) {
       handleFetchError("Failed to load instructors.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadStudents = async () => {
+    setLoading(true);
     try {
+      await checkAuth(navigate);
       const request = await fetch(
         `${SERVER_URL}/api/sections/${sectionId}/students`,
         {
@@ -82,6 +95,8 @@ const Section = () => {
       if (request.ok) setStudents(response);
     } catch (error) {
       handleFetchError("Failed to load students.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,6 +112,7 @@ const Section = () => {
   }, [section]);
 
   const edit = async (e: React.FormEvent) => {
+    setLoading(true);
     e.preventDefault();
     if (
       sectionCode === section.sectionCode &&
@@ -105,6 +121,7 @@ const Section = () => {
     return;
 
     try {
+      await checkAuth(navigate);
       const request = await fetch(
         `${SERVER_URL}/api/sections/${sectionId}`,
         {
@@ -135,11 +152,15 @@ const Section = () => {
       handleFetchSuccess("Changes were saved!");
     } catch (error) {
       handleFetchError("Something went wrong! Try Again");
+    } finally {
+      setLoading(false);
     }
   };
 
   const switchActive = async () => {
+    setLoading(true);
     try {
+      await checkAuth(navigate);
       const request = await fetch(
         `${SERVER_URL}/api/sections/${sectionId}`,
         {
@@ -162,14 +183,16 @@ const Section = () => {
       handleFetchSuccess("Changes were saved!");
     } catch (error) {
       handleFetchError("Something wrong happened! Try again");
+    } finally {
+      setLoading(false);
     }
   };
 
   const deleteSection = async (e: React.FormEvent) => {
+    setLoading(true);
     e.preventDefault();
-    console.log("here")
     try {
-      console.log("here 2");
+      await checkAuth(navigate);
       const request = await fetch(
         `${SERVER_URL}/api/sections/${sectionId}`,
         {
@@ -199,11 +222,15 @@ const Section = () => {
         }, 5000);
     } catch (error) {
       handleFetchError("Something wrong happened! Try again");
+    } finally {
+      setLoading(false);
     }
   };
 
   const executeExpell = async (studentId: string) => {
+    setLoading(true);
     try {
+      await checkAuth(navigate);
       const request = await fetch(
         `${SERVER_URL}/api/sections/expell`,
         {
@@ -229,10 +256,14 @@ const Section = () => {
     } catch (error) {
       setErrorExpell("Something wrong happened! Try again");
       setTimeout(() => setErrorExpell(""), 5000);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
+    <>
+    {loading && <Loading/>}
     <div className="context-menu">
       <form className="form-container" onSubmit={edit}>
         <Link to={`/admin_individual_course/${section.courseID}`}>
@@ -397,6 +428,7 @@ const Section = () => {
           )}
       </div>
     </div>
+  </>
   );
 };
 

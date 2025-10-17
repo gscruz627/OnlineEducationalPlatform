@@ -28,7 +28,7 @@ namespace OnlineEducationaAPI.Controllers
         }
 
 
-        [HttpGet("enrollments")]
+        [HttpGet]
         [Authorize]
         // GET api/enrollments?studentId=...&sectionId=...
         public async Task<ActionResult<List<object>>> GetEnrollments([FromQuery] Guid? studentId = null, [FromQuery] Guid? sectionId = null)

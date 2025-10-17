@@ -101,7 +101,7 @@ namespace OnlineEducationaAPI.Controllers
         }
 
         [HttpGet("{assignmentId:Guid}/submissions")]
-        [Authorize(Roles = "instructor")]
+        [Authorize]
         // GET api/assignments/{assignmentId}/submissions?studentId={studentId}
         public async Task<ActionResult<List<object>>> GetSubmissions(Guid assignmentId, [FromQuery] Guid? studentId = null)
         {

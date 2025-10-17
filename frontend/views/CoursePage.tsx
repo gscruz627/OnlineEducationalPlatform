@@ -4,10 +4,13 @@ import "./styles/CourseAndSection.css";
 import "./styles/MyCourses.css";
 import { useNavigate, useParams } from "react-router-dom";
 import state from "../store";
+import checkAuth from "../functions";
+import Loading from "../components/Loading";
 
 const CoursePage = () => {
   const { kind, sectionId } = useParams();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
+  const [loading, setLoading] = useState<boolean>(false);
 
   const [section, setSection] = useState<any>(null);
   const [announcementTitle, setAnnouncementTitle] = useState<string>("");
@@ -20,8 +23,10 @@ const CoursePage = () => {
   const navigate = useNavigate();
 
   const loadSectionInformation = async () => {
+    setLoading(true);
     let request = null;
     try {
+      await checkAuth(navigate);
       request = await fetch(
         `${SERVER_URL}/api/sections/${sectionId}`,
         {
@@ -31,36 +36,49 @@ const CoursePage = () => {
           },
         }
       );
+      if (!request.ok) {
+        alert("Fatal Error, please reload");
+        return;
+      }
+      const response = await request.json();
+      setSection(response);
     } catch (error) {
       alert("Fatal Error, please reload");
       return;
+    } finally {
+      setLoading(false);
     }
-    if (!request.ok) {
-      alert("Fatal Error, please reload");
-      return;
-    }
-    const response = await request.json();
-    setSection(response);
   };
   const loadAnnouncements = async () => {
-    const request = await fetch(
-      `${SERVER_URL}/api/announcements?sectionId=${sectionId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${state.token}`,
-        },
+    setLoading(true);
+    try{
+      await checkAuth(navigate);
+      const request = await fetch(
+        `${SERVER_URL}/api/announcements?sectionId=${sectionId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${state.token}`,
+          },
+        }
+      );
+      if (request.ok) {
+        const response = await request.json();
+        setAnnouncements(response);
       }
-    );
-    if (request.ok) {
-      const response = await request.json();
-      setAnnouncements(response);
+    } catch(err: unknown){
+      alert("Fatal error, please reload");
+      return;
+    } finally {
+      setLoading(false);
     }
   };
   const createAnnouncement = async (e: React.FormEvent) => {
+    setLoading(true);
     e.preventDefault();
     let request = null;
     try {
+      await checkAuth(navigate);
       request = await fetch(`${SERVER_URL}/api/announcements`, {
         method: "POST",
         headers: {
@@ -73,26 +91,28 @@ const CoursePage = () => {
           sectionId: sectionId,
         }),
       });
+      if (!request?.ok) {
+        setAnnounncementError("Something wrong has happened, Try again!");
+        setTimeout(() => {
+          setAnnounncementError("");
+        }, 5000);
+      }
+      const response = await request?.json();
+      setAnnouncements([...announcements, response]);
+      setAnnouncementSucess("Announcement Created!");
+      setAnnouncementDescription("");
+      setAnnouncementTitle("");
+      setTimeout(() => {
+        setAnnouncementSucess("");
+      }, 5000);
     } catch (error) {
       setAnnounncementError("Something wrong has happened, Try again!");
       setTimeout(() => {
         setAnnounncementError("");
       }, 5000);
+    } finally {
+      setLoading(false);
     }
-    if (!request?.ok) {
-      setAnnounncementError("Something wrong has happened, Try again!");
-      setTimeout(() => {
-        setAnnounncementError("");
-      }, 5000);
-    }
-    const response = await request?.json();
-    setAnnouncements([...announcements, response]);
-    setAnnouncementSucess("Announcement Created!");
-    setAnnouncementDescription("");
-    setAnnouncementTitle("");
-    setTimeout(() => {
-      setAnnouncementSucess("");
-    }, 5000);
   };
 
   useEffect(() => {
@@ -100,6 +120,8 @@ const CoursePage = () => {
     loadAnnouncements();
   }, []);
   return (
+    <>
+    {loading && <Loading/> }
     <div className="context-menu">
       <div className="side-bar">
         <h1>{section && `${section.course?.courseCode} - ${section.sectionCode}`}</h1>
@@ -109,7 +131,7 @@ const CoursePage = () => {
             onClick={() => {
               navigate(`/course_page/${kind}/${sectionId}`);
             }}
-          >
+            >
             Announcements
           </li>
           <li
@@ -125,7 +147,7 @@ const CoursePage = () => {
             onClick={() => {
               navigate(`/course_page/${sectionId}/students/`);
             }}
-          >
+            >
             Students
           </li>
         </ul>
@@ -152,14 +174,14 @@ const CoursePage = () => {
             <h2
               className="color-gray"
               style={{ textAlign: "center", margin: "1rem 0" }}
-            >
+              >
               Create a new announcement
             </h2>
             <hr />
             <form
               style={{ display: "flex", flexDirection: "column", gap: "10px" }}
               onSubmit={(e) => createAnnouncement(e)}
-            >
+              >
               <label htmlFor="announcement_title">Title:</label>
               <input
                 style={{
@@ -214,6 +236,7 @@ const CoursePage = () => {
         )}
       </div>
     </div>
+  </>
   );
 };
 
