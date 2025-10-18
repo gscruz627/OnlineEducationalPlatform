@@ -15,7 +15,6 @@ namespace OnlineEducationaAPI.Controllers
         [HttpGet]
         [Authorize]
         [Route("{id:Guid}")]
-        // GET api/assignments/0 -> Returns one assignment
         public async Task<ActionResult<CourseAssignment>> GetAssignment(Guid id)
         {
             CourseAssignment? assignment = await dbcontext.CourseAssignments.FindAsync(id);
@@ -28,7 +27,6 @@ namespace OnlineEducationaAPI.Controllers
 
         [HttpGet]
         [Authorize]
-        // GET api/assignments?sectionId=...
         public async Task<ActionResult<CourseAssignment>> GetAll([FromQuery] string sectionId)
         {
             IQueryable<CourseAssignment> assignments = dbcontext.CourseAssignments.AsQueryable();
@@ -42,7 +40,6 @@ namespace OnlineEducationaAPI.Controllers
 
         [HttpPost]
         [Authorize(Roles = "instructor")]
-        // POST api/assignments -> Creates an assignment
         public async Task<ActionResult<CourseAssignment>> NewAssignment(AddAssignmentDTO assignmentDTO)
         {
             Section? section = await dbcontext.Sections.FindAsync(assignmentDTO.SectionID);
@@ -102,7 +99,6 @@ namespace OnlineEducationaAPI.Controllers
 
         [HttpGet("{assignmentId:Guid}/submissions")]
         [Authorize]
-        // GET api/assignments/{assignmentId}/submissions?studentId={studentId}
         public async Task<ActionResult<List<object>>> GetSubmissions(Guid assignmentId, [FromQuery] Guid? studentId = null)
         {
             var query = dbcontext.Submissions
@@ -133,7 +129,6 @@ namespace OnlineEducationaAPI.Controllers
 
         [HttpPost("submit")]
         [Authorize]
-        // POST api/assignments/submission -> Creates a submission
         public async Task<ActionResult<Submission>> MakeSubmission(AddSubmissionDTO assignmentDTO)
         {
             List<Submission> verifyLimitGroup = await dbcontext.Submissions.Where((submission) => submission.StudentID == assignmentDTO.StudentID && submission.AssignmentID == assignmentDTO.AssignmentID).ToListAsync();

@@ -373,7 +373,7 @@ const Assignment = () => {
                 />
               </label>
 
-              <button type="submit" className="blue-btn">
+              <button type="submit" className="red-btn">
                 Save
               </button>
             </form>
@@ -418,7 +418,7 @@ const Assignment = () => {
                   className="member-item-user-logo"
                   style={{ fontSize: "48px", textAlign: "center" }}
                 >
-                  &#128221;
+                  <i className="fa-solid fa-upload"></i>
                 </span>
               </div>
               <div>
@@ -462,6 +462,9 @@ const Assignment = () => {
                   {submissionOpen ? "Cancel Submission" : "New Submission"}
                 </button>
               )}
+            {assignment && (new Date(assignment.dueDate) < new Date()) && (
+              <h3>Submission Due Date already passed.</h3>
+            )}
             <hr />
             {submissionOpen && (
               <form onSubmit={(e) => executeCreateSubmission(e)}>

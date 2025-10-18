@@ -16,7 +16,6 @@ namespace OnlineEducationaAPI.Controllers
         [HttpGet]
         [Authorize]
         [Route("{id:Guid}")]
-        // GET api/enrollments/{id} -> Get enrollment by Id
         public async Task<ActionResult<Enrollment>> GetEnrollment(Guid id)
         {
             Enrollment? enrollment = await dbcontext.Enrollments.FindAsync(id);
@@ -30,10 +29,8 @@ namespace OnlineEducationaAPI.Controllers
 
         [HttpGet]
         [Authorize]
-        // GET api/enrollments?studentId=...&sectionId=...
         public async Task<ActionResult<List<object>>> GetEnrollments([FromQuery] Guid? studentId = null, [FromQuery] Guid? sectionId = null)
         {
-            // Start with all enrollments
             var query = dbcontext.Enrollments
                 .Join(
                     dbcontext.Sections,
@@ -58,7 +55,6 @@ namespace OnlineEducationaAPI.Controllers
                     }
                 );
 
-            // Optional filters
             if (studentId.HasValue)
             {
                 query = query.Where(e => e.StudentId == studentId.Value);
@@ -75,7 +71,6 @@ namespace OnlineEducationaAPI.Controllers
 
         [HttpPost]
         [Authorize]
-        // POST api/enrollments -> Enroll a student into a section
         public async Task<ActionResult<Enrollment>> EnrollStudent(AddEnrollmentDTO enrollmentDTO)
         {
             Enrollment? check = await dbcontext.Enrollments.FirstOrDefaultAsync((enrollment) => enrollment.StudentID == enrollmentDTO.StudentID && enrollment.SectionID == enrollmentDTO.SectionID);
@@ -95,7 +90,6 @@ namespace OnlineEducationaAPI.Controllers
 
         [HttpPost("{sectionId:guid}")]
         [Authorize]
-        // DELETE api/enrollment -> Expell a student
         public async Task<IActionResult> ExpellStudent(Guid sectionId, ExpellDTO expellStudentDTO)
         {
             Enrollment? enrollment = await dbcontext.Enrollments.FirstOrDefaultAsync((enrollment) => enrollment.StudentID == expellStudentDTO.MemberID && enrollment.SectionID == sectionId);

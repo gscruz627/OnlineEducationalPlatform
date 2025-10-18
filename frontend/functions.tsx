@@ -1,7 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import state from "./store";
 import type { NavigateFunction } from "react-router-dom";
-import type { CustomJwtPayload } from "./enums"
+import type { CustomJwtPayload } from "./sources"
 
 export function logout(){
     state.user = null;

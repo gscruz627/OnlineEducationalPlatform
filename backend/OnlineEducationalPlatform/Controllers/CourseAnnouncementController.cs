@@ -15,7 +15,6 @@ namespace OnlineEducationaAPI.Controllers
         [HttpGet]
         [Authorize]
         [Route("{id:Guid}")]
-        // GET api/announcements/0 -> Returns that one announcemennt
         public async Task<ActionResult<CourseAnnouncement>> GetAnnouncement(Guid id)
         {
             CourseAnnouncement? announcement = await dbcontext.CourseAnnouncements.FindAsync(id);
@@ -28,7 +27,6 @@ namespace OnlineEducationaAPI.Controllers
 
         [HttpGet]
         [Authorize]
-        // GET api/announcements/section/0 -> Returns announcements per section
         public async Task<ActionResult<List<CourseAnnouncement>>> GetAll([FromQuery] string sectionId)
         {
             IQueryable<CourseAnnouncement> announcements = dbcontext.CourseAnnouncements.AsQueryable();
@@ -43,7 +41,6 @@ namespace OnlineEducationaAPI.Controllers
         [HttpPatch]
         [Authorize(Roles = "instructor")]
         [Route("{id:Guid}")]
-        // PATCH api/annnounncements/0 -> Edits this announcement
         public async Task<ActionResult<CourseAnnouncement>> Edit(Guid id, [FromBody] AddNewAnnouncementDTO announcementDTO)
         {
             CourseAnnouncement? announcement = await dbcontext.CourseAnnouncements.FindAsync(id);
@@ -61,7 +58,6 @@ namespace OnlineEducationaAPI.Controllers
 
         [HttpPost]
         [Authorize(Roles = "instructor")]
-        // POST api/announcements -> Creates a new annnouncement.
         public async Task<ActionResult<CourseAnnouncement>> NewAnnouncement(AddNewAnnouncementDTO announcementDTO)
         {
             Section? section = await dbcontext.Sections.FindAsync(announcementDTO.SectionID);
@@ -84,7 +80,6 @@ namespace OnlineEducationaAPI.Controllers
         [HttpDelete]
         [Authorize(Roles = "instructor")]
         [Route("{id:Guid}")]
-        // DELETE api/announcements/0 -> Deletes an announcement.
         public async Task<IActionResult> Delete(Guid id)
         {
             CourseAnnouncement? announcement = await dbcontext.CourseAnnouncements.FindAsync(id);

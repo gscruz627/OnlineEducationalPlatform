@@ -215,7 +215,7 @@ const CoursePage = () => {
                 value={announcementDescription}
               ></textarea>
 
-              <button type="submit" className="blue-btn">
+              <button type="submit" className="red-btn">
                 Create
               </button>
             </form>

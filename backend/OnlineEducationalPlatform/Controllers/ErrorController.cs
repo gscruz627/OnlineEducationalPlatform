@@ -13,7 +13,7 @@ namespace OnlineEducationaAPI.Controllers
             var context = HttpContext.Features.Get<IExceptionHandlerFeature>();
             var exception = context?.Error;
 
-            Console.WriteLine($"Unhandled exception: {exception?.Message}");
+            Console.WriteLine($"Exception: {exception?.Message}");
 
             return Problem(
                 detail: "An unexpected error occurred.",

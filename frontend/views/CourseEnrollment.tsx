@@ -12,6 +12,7 @@ const CourseEnrollment = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [allCourses, setAllCourses] = useState<Array<any>>([]);
   const [courses, setCourses] = useState<Array<any>>([]);
   const [sections, setSections] = useState<Array<any>>([]);
   const [course, setCourse] = useState<any>(null);
@@ -34,6 +35,7 @@ const CourseEnrollment = () => {
       });
       const response = await request.json();
       if (request.ok) {
+        setAllCourses(response);
         setCourses(response);
       }
     } catch(err: unknown){
@@ -73,7 +75,7 @@ const CourseEnrollment = () => {
     setLoading(true);
     try{
       await checkAuth(navigate);
-      const request = await fetch(`${SERVER_URL}/api/instructors`, {
+      const request = await fetch(`${SERVER_URL}/api/users?role=instructor`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${state.token}`,
@@ -134,6 +136,10 @@ const CourseEnrollment = () => {
       setLoading(false);
     }
   };
+  useEffect( () => {
+    setCourses( allCourses.filter( c => c.title.toincludes(searchTerm) || c.courseCode.includes(searchTerm)));
+  }, [searchTerm])
+
   useEffect(() => {
     getAllCourses();
     loadInstructors();
@@ -160,8 +166,8 @@ const CourseEnrollment = () => {
                       <span
                         className="section-item-user-logo"
                         style={{ fontSize: "48px", textAlign: "center" }}
-                      >
-                        &#128218;
+                      > &nbsp;
+                        <i className="fa-solid fa-book"></i>
                       </span>
                     </div>
                     <div>
@@ -201,9 +207,6 @@ const CourseEnrollment = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button className="blue-btn side-with-input" type="submit">
-            Search
-          </button>
         </form>
 
         <h1 className="color-gray">

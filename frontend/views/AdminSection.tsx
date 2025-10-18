@@ -311,8 +311,8 @@ const Section = () => {
             fontWeight: "bolder",
             color: section.isActive ? "brown" : "#298D29",
             marginTop: "1rem",
+            fontFamily: "Sofia Pro",
             fontSize: "22px",
-            textDecoration: "underline",
           }}
         >
           Set to {section.isActive ? "Inactive" : "Active"}
@@ -340,9 +340,9 @@ const Section = () => {
             cursor: "pointer",
             fontWeight: "bolder",
             color: "brown",
+            fontFamily: "Sofia Pro",
             marginBottom: "1rem",
             fontSize: "22px",
-            textDecoration: "underline",
           }}
         >
           Delete this section
@@ -364,7 +364,7 @@ const Section = () => {
         <h1 style={{ textAlign: "center" }}>
           {section.course?.courseCode} -{section.sectionCode}
         </h1>
-        <h1 className="color-gray">Students Enrolled</h1>
+        <h1>Students Enrolled</h1>
         <hr />
         {errorExpell && <div className="error-box">{errorExpell}</div>}
         {successExpell && <div className="success-box">{successExpell}</div>}

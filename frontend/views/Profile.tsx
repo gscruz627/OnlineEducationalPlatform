@@ -59,7 +59,10 @@ const Profile = () => {
     <div
       style={{ textAlign: "center", margin: "1rem 0", fontFamily: "Lisu Bosa" }}
       >
-      <h1 className="color-gray">Profile Page</h1>
+      <h1 className="color-gray">
+        <i className="fa-solid fa-user"></i>
+        &nbsp;Profile Page
+      </h1>
       {user && role === "admin" ? (
         <h2>Username: {user.username}</h2>
       ) : (

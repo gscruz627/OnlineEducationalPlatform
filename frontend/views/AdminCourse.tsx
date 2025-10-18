@@ -106,15 +106,15 @@ const AdminCourse = () => {
   };
 
   const edit = async (e: React.FormEvent) => {
-    setLoading(true);
     e.preventDefault();
     if (
       title === course.title &&
       courseCode === course.courseCode &&
       imageUrl === course.imageURL
     )
-      return;
-
+    return;
+    
+    setLoading(true);
     try {
       await checkAuth(navigate);
       const request = await fetch(
@@ -152,15 +152,15 @@ const AdminCourse = () => {
   };
 
   const createSection = async (e: React.FormEvent) => {
-    setLoading(true);
-
+    
     e.preventDefault();
     if (!newSectionCode || !selectedInstructor) {
       setSectionError("Section Code and Instructor fields cannot be empty");
       setTimeout(() => setSectionError(""), 5000);
       return;
     }
-
+    
+    setLoading(true);
     try {
       await checkAuth(navigate);
       const request = await fetch(`${SERVER_URL}/api/sections`, {
@@ -272,7 +272,7 @@ const AdminCourse = () => {
           </div>
         )}
 
-        <button style={{ width: "75%" }} className="blue-btn" type="submit">
+        <button style={{ width: "75%" }} className="red-btn" type="submit">
           Save
         </button>
 
@@ -282,9 +282,9 @@ const AdminCourse = () => {
             cursor: "pointer",
             fontWeight: "bolder",
             color: "brown",
+            fontFamily: "Sofia Pro",
             marginBottom: "1rem",
             fontSize: "22px",
-            textDecoration: "underline",
           }}
           >
           Delete this Course
@@ -302,7 +302,7 @@ const AdminCourse = () => {
         )}
       </form>
       <div>
-        <h1 className="color-gray">New Section</h1>
+        <h1>New Section</h1>
         {sectionSuccess && <div className="success-box">{sectionSuccess}</div>}
         {sectionError && <div className="error-box">{sectionError}</div>}
 
@@ -321,10 +321,10 @@ const AdminCourse = () => {
           <select
             style={{
               fontFamily: "Lisu Bosa",
-              backgroundColor: "#1F6A6A",
+              backgroundColor: "#DDD",
               fontSize: "22px",
               padding: "12px 25px",
-              color: "#fff",
+              color: "#000",
             }}
             value={selectedInstructor}
             onChange={(e) => setSelectedInstructor(e.target.value)}
@@ -352,7 +352,7 @@ const AdminCourse = () => {
           </button>
         </form>
 
-        <h1 className="color-gray">Sections</h1>
+        <h1>Sections</h1>
         {sections?.length === 0 ? (
           <div>No sections available</div>
         ) : (

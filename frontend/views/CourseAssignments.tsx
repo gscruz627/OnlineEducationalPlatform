@@ -286,7 +286,7 @@ const CourseAssignment = () => {
                   />
               </label>
 
-              <button type="submit" className="blue-btn">
+              <button type="submit" className="red-btn">
                 Create
               </button>
             </form>
@@ -313,7 +313,7 @@ const CourseAssignment = () => {
                   )
                 }
               >
-                &#128221; {assignment.name}
+                <i className="fa-solid fa-list-check"></i> &nbsp; {assignment.name}
               </p>
               <div>
                 <p

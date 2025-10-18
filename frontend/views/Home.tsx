@@ -19,10 +19,10 @@ const Home = () => {
   const [announcements, setAnnouncements] = useState<any>([]);
 
   useEffect(() => {
-    if (snap.role === "instructor") {
+    if (snap.user?.role === "instructor") {
       sections.forEach((section:any) => loadAssignments(section.id));
     } else {
-      sections.forEach((section:any) => loadAnnouncements(section.id));
+      sections.forEach((section:any) => loadAnnouncements(section.sectionId));
     }
   }, [sections]);
 
@@ -56,10 +56,13 @@ const Home = () => {
   };
   const loadSections = async () => {
     setLoading(true);
-    const route =
-      snap.role === "instructor"
-        ? `${SERVER_URL}/api/sections?userId=${snap.user.id}`
-        : `${SERVER_URL}/api/sections?userId=${snap.user.id}`;
+    let route = "";
+    if(snap.user?.role){
+      route = (snap.user?.role === "instructor")
+        ? `${SERVER_URL}/api/sections?instructorId=${snap.user.userId}`
+        : `${SERVER_URL}/api/enrollments?userId=${snap.user.userId}`; 
+    }
+    console.log(route);
     let request = null;
     try {
       await checkAuth(navigate);
@@ -69,8 +72,10 @@ const Home = () => {
           Authorization: `Bearer ${state.token}`,
         },
       });
+      console.log(request.status)
       if (request.ok) {
         const response = await request.json();
+        console.log(response);
         setSections(response);
       }
     } catch (error) {
@@ -164,7 +169,7 @@ const Home = () => {
           </button>
         </section>
       )}
-      {snap.user && snap.role == "admin" && (
+      {snap.user && snap.user.role === "admin" && (
         <section style={{ fontFamily: "Lisu Bosa" }}>
           <h1 style={{ fontSize: "48px" }}>Online Learning Platform</h1>
           <h2 className="color-gray">Admin Manager Center</h2>
@@ -187,7 +192,7 @@ const Home = () => {
           <h1>Created by Gustavo La Cruz, February 2025</h1>
         </section>
       )}
-      {snap.user && (snap.role === "student" || snap.role === "instructor") && (
+      {snap.user && (snap.user.role === "student" || snap.user.role === "instructor") && (
         <div style={{ fontFamily: "Lisu Bosa" }}>
           <h1 className="color-gray">My Courses</h1>
           <hr />
@@ -197,14 +202,14 @@ const Home = () => {
                 <div
                   key={section.id}
                   className="course-card"
-                  onClick={() => navigate(`/course_page/${snap.role}/${section.id}`)}
+                  onClick={() => navigate(`/course_page/${snap.user?.role}/${section.id ?? section.sectionId}`)}
                 >
-                  <img src={section.imageURL} />
+                  <img src={section.imageURL ?? section.course?.imageURL} />
                   <div>
                     <h2>
-                      {section.courseCode} - {section.sectionCode}
+                      {section.courseCode ?? section.course?.courseCode} - {section.sectionCode}
                     </h2>
-                    <p>{section.title}</p>
+                    <p>{section.title ?? section.course?.title}</p>
                   </div>
                 </div>
               ))}
@@ -215,8 +220,8 @@ const Home = () => {
           {sections &&
             sections.map((section:any) => (
               <div key={section.id}>
-                <h2 style={{ textDecoration: "underline" }}>
-                  {section.courseCode} - {section.sectionCode}: {section.title}
+                <h2 style={{ fontFamily: "Sofia Pro", color: "red" }}>
+                  {section.courseCode ?? section.course?.courseCode} - {section.sectionCode}: {section.title ?? section.course?.title}
                 </h2>
 
                 {announcements[section.id] &&
@@ -239,7 +244,7 @@ const Home = () => {
             ))}
         </div>
       )}
-      {snap.user && snap.role === "instructor" && (
+      {snap.user && snap.user.role === "instructor" && (
         <div style={{ fontFamily: "Lisu Bosa" }}>
           <h1 className="color-gray">Student Submissions</h1>
           <hr />
@@ -249,8 +254,8 @@ const Home = () => {
                 key={section.id}
                 style={{ margin: "1rem 0", borderBottom: "1px dashed gray" }}
               >
-                <h2 style={{ textDecoration: "underline" }}>
-                  {section.courseCode} - {section.sectionCode}: {section.title}
+                <h2 style={{ fontFamily: "Sofia Pro", color: "red" }}>
+                  {section.courseCode ?? section.course?.courseCode} - {section.sectionCode}: {section.title ?? section.course?.title}
                 </h2>
                 {assignments[section.id] &&
                 assignments[section.id].length > 0 ? (
@@ -271,7 +276,7 @@ const Home = () => {
                                     textAlign: "center",
                                   }}
                                 >
-                                  &#128221;
+                                 <i className="fa-solid fa-upload"></i>
                                 </span>
                               </div>
                               <div>

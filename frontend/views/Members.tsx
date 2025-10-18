@@ -239,15 +239,15 @@ useEffect(() => {
   if (kind === "instructor") {
     const filteredInstructors = (allInstructors || []).filter(
         (instructor: any) =>
-          (instructor?.Email || "").includes(search) ||
-          (instructor?.Name || "").includes(search)
+          (instructor?.Email || "").toLowerCase().includes(search.toLowerCase()) ||
+          (instructor?.Name || "").toLowerCase().includes(search.toLowerCase())
       );
       setInstructors(filteredInstructors);
     } else {
       const filteredStudents = (allStudents || []).filter(
         (student: any) =>
-          (student?.Email || "").includes(search) ||
-          (student?.Name || "").includes(search)
+          (student?.Email || "").toLowerCase().includes(search.toLowerCase()) ||
+          (student?.Name || "").toLowerCase().includes(search.toLowerCase())
       );
       setStudents(filteredStudents);
     }
@@ -320,7 +320,7 @@ useEffect(() => {
                     className="member-item-user-logo"
                     style={{ fontSize: "48px", textAlign: "center" }}
                   >
-                    &#128100;
+                    <i className="fa-solid fa-user-tie"></i>
                   </span>
                 </div>
                 <div>
@@ -347,17 +347,17 @@ useEffect(() => {
                 <div className="member-item-buttons">
                   {editIndex === i ? (
                     <button
-                      style={{ backgroundColor: "#783600" }}
+                      style={{ backgroundColor: "#783600"}}
                       onClick={() => editMember(i)}
                     >
-                      &#128683;
+                      <i style={{ color: "#FFF"}} className="fa-solid fa-xmark"></i>
                     </button>
                   ) : (
                     <button
                     style={{ backgroundColor: "#AA6C39" }}
                       onClick={() => editMember(i)}
                     >
-                      &#128221;
+                      <i style={{color: "#FFF" }} className="fa-solid fa-pen-to-square"></i>
                     </button>
                   )}
                   {editIndex === i ? (
@@ -365,14 +365,14 @@ useEffect(() => {
                       style={{ backgroundColor: "#298D29", color: "#FFF" }}
                       onClick={(e) => executeEdit(e, i, instructor.id)}
                       >
-                      &#10003;
+                      <i className="fa-solid fa-check"></i>
                     </button>
                   ) : (
                     <button
                     style={{ backgroundColor: "brown", color: "#FFF" }}
                       onClick={() => deleteMember(i)}
                       >
-                      &#128465;
+                      <i className="fa-solid fa-trash"></i>
                     </button>
                   )}
                 </div>
@@ -414,7 +414,7 @@ useEffect(() => {
                     className="member-item-user-logo"
                     style={{ fontSize: "48px", textAlign: "center" }}
                   >
-                    &#128100;
+                    <i className="fa-solid fa-user"></i>
                   </span>
                 </div>
                 <div>
@@ -442,14 +442,14 @@ useEffect(() => {
                       style={{ backgroundColor: "#783600" }}
                       onClick={() => editMember(i)}
                       >
-                      &#128683;
+                      <i style={{ color: "#FFF"}} className="fa-solid fa-xmark"></i>
                     </button>
                   ) : (
                     <button
                     style={{ backgroundColor: "#AA6C39" }}
                       onClick={() => editMember(i)}
                     >
-                      &#128221;
+                      <i style={{color: "#FFF" }} className="fa-solid fa-pen-to-square"></i>
                     </button>
                   )}
                   {editIndex === i ? (
@@ -457,14 +457,14 @@ useEffect(() => {
                       style={{ backgroundColor: "#298D29", color: "#FFF" }}
                       onClick={(e) => executeEdit(e, i, student.id)}
                       >
-                      &#10003;
+                      <i className="fa-solid fa-check"></i>
                     </button>
                   ) : (
                     <button
                     style={{ backgroundColor: "brown", color: "#FFF" }}
                       onClick={() => deleteMember(i)}
                       >
-                      &#128465;
+                      <i className="fa-solid fa-trash"></i>
                     </button>
                   )}
                 </div>

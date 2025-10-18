@@ -29,7 +29,7 @@ namespace OnlineEducationaAPI.Controllers
         // GET api/sections?sectionId={sectionId}&courseId={courseId}
         public async Task<ActionResult<List<object>>> GetSections([FromQuery] Guid? instructorId = null, [FromQuery] Guid? courseId = null)
         {
-            var query = dbcontext.Sections.Include(s => s.Course).AsQueryable();
+            IQueryable<Section> query = dbcontext.Sections.Include(s => s.Course).AsQueryable();
 
             if (instructorId.HasValue)
             {
@@ -41,8 +41,7 @@ namespace OnlineEducationaAPI.Controllers
                 query = query.Where(s => s.CourseID == courseId.Value);
             }
 
-            // otherwise return list
-            var sections = await query.ToListAsync();
+            List<Section> sections = await query.ToListAsync();
             return Ok(sections);
         }
 
@@ -50,7 +49,6 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize]
         [Route("{id:Guid}/students")]
         public async Task<ActionResult<List<object>>> GetStudentsbySection(Guid id)
-        // GET api/sections/0/students -> Get all students per section (by Id)
         {
             var students = await dbcontext.Enrollments
             .Where(enrollment => enrollment.SectionID == id)
@@ -67,11 +65,10 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize(Roles = "admin")]
         public async Task<ActionResult<Section>> Edit(Guid id, [FromBody] AddNewSectionDTO sectionDTO)
         {
-            var section = await dbcontext.Sections.FindAsync(id);
+            Section? section = await dbcontext.Sections.FindAsync(id);
             if (section is null)
                 return NotFound();
 
-            // Optional duplicate check only if both CourseID & SectionCode provided
             if (sectionDTO.CourseID != null && sectionDTO.SectionCode != null)
             {
                 bool exists = await dbcontext.Sections
@@ -80,7 +77,6 @@ namespace OnlineEducationaAPI.Controllers
                     return BadRequest("A section with that code already exists for the given course.");
             }
 
-            // Only update fields that are not null in the DTO
             if (sectionDTO.SectionCode != null)
                 section.SectionCode = sectionDTO.SectionCode ?? section.SectionCode;
 
@@ -101,7 +97,7 @@ namespace OnlineEducationaAPI.Controllers
 
             await dbcontext.SaveChangesAsync();
 
-            var editedSection = await dbcontext.Sections.Include(s => s.Course).FirstOrDefaultAsync(s => s.Id == id);
+            Section? editedSection = await dbcontext.Sections.Include(s => s.Course).FirstOrDefaultAsync(s => s.Id == id);
 
             return Ok(editedSection);
         }
@@ -110,11 +106,9 @@ namespace OnlineEducationaAPI.Controllers
         [Authorize(Roles = "admin")]
         public async Task<ActionResult<Section>> NewSection(AddNewSectionDTO sectionDTO)
         {
-            // Validate required fields
             if (sectionDTO.SectionCode == null || sectionDTO.CourseID == null || sectionDTO.InstructorID == null)
                 return BadRequest("SectionCode, CourseID and InstructorID are required.");
 
-            // Check if a section already exists
             bool exists = await dbcontext.Sections
                 .AnyAsync(s => s.SectionCode == sectionDTO.SectionCode && s.CourseID == sectionDTO.CourseID);
             if (exists)
@@ -143,7 +137,6 @@ namespace OnlineEducationaAPI.Controllers
         [HttpDelete]
         [Authorize(Roles = "admin")]
         [Route("{id:Guid}")]
-        // DELETE api/sections -> Remove a section by Id.
         public async Task<IActionResult> Remove(Guid id)
         {
             Section? section = await dbcontext.Sections.FindAsync(id);

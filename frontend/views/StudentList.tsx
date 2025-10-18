@@ -130,7 +130,7 @@ const StudentList = () => {
               className="member-item-user-logo"
               style={{ fontSize: "48px", textAlign: "center" }}
             >
-              &#128100;
+              <i className="fa-solid fa-user-tie"></i>
             </span>
           </div>
           <div>
@@ -151,7 +151,7 @@ const StudentList = () => {
                   className="member-item-user-logo"
                   style={{ fontSize: "48px", textAlign: "center" }}
                 >
-                  &#128100;
+                  <i className="fa-solid fa-user"></i>
                 </span>
               </div>
               <div>

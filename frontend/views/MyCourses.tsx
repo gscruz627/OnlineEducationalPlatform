@@ -6,6 +6,7 @@ import "./styles/MyCourses.css";
 import "./styles/CourseAndSection.css";
 import { useNavigate, useParams } from "react-router-dom";
 import checkAuth from "../functions";
+import Loading from "../components/Loading";
 
 const MyCourses = () => {
   const { kind } = useParams();
@@ -57,7 +58,7 @@ const MyCourses = () => {
               className="course-card"
               onClick={() => navigate(`/course_page/${kind}/${section.id ?? section.sectionId}`)}
             >
-              <img src={section.imageURL} />
+              <img src={section.imageURL ?? section.course?.imageURL} />
               <div>
                 <h2>
                   {section.courseCode ?? section.course?.courseCode} - {section.sectionCode}

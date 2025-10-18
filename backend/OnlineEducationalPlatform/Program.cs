@@ -85,6 +85,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// This is to prevent caching
 app.Use(async (context, next) =>
 {
 
