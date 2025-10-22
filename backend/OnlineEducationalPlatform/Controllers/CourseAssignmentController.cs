@@ -50,7 +50,7 @@ namespace OnlineEducationaAPI.Controllers
             CourseAssignment assignment = new()
             {
                 Description = assignmentDTO.Description,
-                DueDate = assignmentDTO.DueDate,
+                DueDate = DateTime.SpecifyKind(assignmentDTO.DueDate, DateTimeKind.Utc),
                 IsActive = assignmentDTO.IsActive,
                 Name = assignmentDTO.Name,
                 SectionID = assignmentDTO.SectionID,
@@ -58,6 +58,7 @@ namespace OnlineEducationaAPI.Controllers
                 SubmissionLimit = assignmentDTO.SubmissionLimit,
                 RequiresFileSubmission = assignmentDTO.RequiresFileSubmission
             };
+
             await dbcontext.CourseAssignments.AddAsync(assignment);
             await dbcontext.SaveChangesAsync();
             return CreatedAtAction(nameof(GetAssignment), new { id = assignment.Id }, assignment);
@@ -66,7 +67,7 @@ namespace OnlineEducationaAPI.Controllers
         [HttpPatch]
         [Authorize(Roles = "instructor")]
         [Route("{id:Guid}")]
-        // PATCH api/assignments/0 -> Modifies that assignment
+        [HttpPut("{id:guid}")]
         public async Task<ActionResult<CourseAssignment>> Edit(Guid id, [FromBody] AddAssignmentDTO assignmentDTO)
         {
             CourseAssignment? assignment = await dbcontext.CourseAssignments.FindAsync(id);
@@ -74,14 +75,17 @@ namespace OnlineEducationaAPI.Controllers
             {
                 return NotFound();
             }
+
             assignment.SubmissionLimit = assignmentDTO.SubmissionLimit;
             assignment.RequiresFileSubmission = assignmentDTO.RequiresFileSubmission;
-            assignment.DueDate = assignmentDTO.DueDate;
+            assignment.DueDate = DateTime.SpecifyKind(assignmentDTO.DueDate, DateTimeKind.Utc); // ✅ Fix here
             assignment.Description = assignmentDTO.Description;
             assignment.Name = assignmentDTO.Name;
+
             await dbcontext.SaveChangesAsync();
             return Ok(assignment);
         }
+
 
         [HttpDelete("{id:guid}")]
         [Authorize(Roles = "instructor")]
