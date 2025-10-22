@@ -36,9 +36,6 @@ function Home(){
       );
       if (request.ok) {
         const response = await request.json();
-
-        console.log(response[0]);
-
         setAnnouncements((prev: Array<Announcement>) => {
   // Filter out any announcements already in state
   const newAnnouncements = response.filter(
@@ -58,23 +55,6 @@ function Home(){
     }
   };
 
-useEffect(() => {
-  console.log("announcement updates:");
-  console.log(typeof(announcements));
-  console.log(announcements.length);
-  console.log(announcements[0], announcements[1])
-  announcements.forEach(element => {
-    console.log(element)
-  });
-}, [announcements]);
-
-  useEffect( () => {
-    console.log("assignments update: " + assignments);
-  }, [assignments])
-
-  useEffect( () => {
-    console.log("submissions updates: " + submissions)
-  })
 
   async function loadSections(){
     setLoading(true);
@@ -84,7 +64,6 @@ useEffect(() => {
         ? `${SERVER_URL}/api/sections?instructorId=${snap.user.userId}`
         : `${SERVER_URL}/api/enrollments?userId=${snap.user.userId}`; 
     }
-    console.log(route);
     let request = null;
     try {
       await checkAuth(navigate);
@@ -94,10 +73,8 @@ useEffect(() => {
           Authorization: `Bearer ${state.token}`,
         },
       });
-      console.log(request.status)
       if (request.ok) {
         const response = await request.json();
-        console.log(response);
         setSections(response);
       }
     } catch (error) {
@@ -124,7 +101,6 @@ async function loadAssignments(sectionId: string) {
 
     if (request.ok) {
       const response: Array<Assignment> = await request.json();
-      console.log('Fetched assignments for section', sectionId, response);
 
       // Add new assignments to state, avoiding duplicates
       setAssignments((prev: Array<Assignment>) => {
@@ -163,7 +139,6 @@ async function loadSubmissions(assignmentId: string) {
 
     if (request.ok) {
       const response: Array<Submission> = await request.json();
-      console.log('Fetched submissions for assignment', assignmentId, response);
 
       setSubmissions((prev: Array<Submission>) => {
         // Filter out any submissions already in state

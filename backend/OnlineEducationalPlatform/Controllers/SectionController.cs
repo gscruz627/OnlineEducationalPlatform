@@ -52,7 +52,7 @@ namespace OnlineEducationaAPI.Controllers
         {
             var students = await dbcontext.Enrollments
             .Where(enrollment => enrollment.SectionID == id)
-            .Join(dbcontext.Users.Where(u => u.Role == "Student"),
+            .Join(dbcontext.Users.Where(u => u.Role == "student"),
             enrollment => enrollment.StudentID,
             student => student.Id,
             (enrollment, student) => new { student.Id, student.Name, student.Email })
