@@ -81,7 +81,7 @@ function AdminCourses(){
                   navigate(`/admin_individual_course/${course.id}`)
                 }
                 >
-                <img src={course.imageURL} alt="course" />
+                <img src={course.imageURL} alt="course" width="100%" />
                 <div>
                   <h2>{course.courseCode}</h2>
                   <p>{course.title}</p>

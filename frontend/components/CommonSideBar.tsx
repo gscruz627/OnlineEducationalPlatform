@@ -165,7 +165,7 @@ const CommonSideBar = ({ choice, updater }: { choice: string; updater: React.Dis
           <input id="c_image" type="text" onChange={(e) => setImageUrl(e.target.value)} value={imageUrl} />
           {imageUrl && (
             <div className="image-holder">
-              <img className="image-holder-img" src={imageUrl} alt="Course Preview" />
+              <img className="image-holder-img" src={imageUrl} alt="Course Preview" width="100%"/>
             </div>
           )}
         </>

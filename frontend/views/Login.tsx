@@ -128,9 +128,9 @@ function Login(){
       </button>
 
       <small>Demo Login Information: <br/> 
-        For Administators: testadmin, pw: test1234
-        For Student: Marcus.Student@someinstitution.com, pw: 12345678
-        For Instructor: John.Doe@someinstitution.com, pw: 12345678
+        For Administators: admin, pw: demodemodemo
+        For Student: Student1@company.com, pw: demodemodemo
+        For Instructor: Instructor1@company.com, pw: demodemodemo
       </small>
     </form>
   </>
