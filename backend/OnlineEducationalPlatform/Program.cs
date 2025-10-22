@@ -5,11 +5,12 @@ using OnlineEducationaAPI.Data;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
-    options.UseSqlServer(Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"))
+    options.UseNpgsql(Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"))
 );
 
 builder.Services.AddRateLimiter(options =>
