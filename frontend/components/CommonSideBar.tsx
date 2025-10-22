@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
-import "../src/App.css";
-import "../views/styles/Instructors.css";
-import "../views/styles/Auth.css";
 import state from "../store";
 import checkAuth from "../functions";
 import { useNavigate } from "react-router-dom";
 import Loading from "./Loading";
+import type { Course, User } from "../sources";
+import "../src/App.css";
+import "../views/styles/Instructors.css";
+import "../views/styles/Auth.css";
 
-const CommonSideBar = ({ choice, updater }: { choice: any; updater: any }) => {
+const CommonSideBar = ({ choice, updater }: { choice: string; updater: React.Dispatch<React.SetStateAction<Array<any>>>}) => {
 
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
@@ -73,7 +74,7 @@ const CommonSideBar = ({ choice, updater }: { choice: any; updater: any }) => {
       }
 
       const response = await request.json();
-      updater((prev:any) => [...prev , response]);
+      updater((prev) => [...prev , response]);
 
       displaySuccess("Course was created!");
     } catch (error) {
@@ -121,7 +122,7 @@ const CommonSideBar = ({ choice, updater }: { choice: any; updater: any }) => {
       }
 
       const response = await request.json();
-      updater((prev:any) => [...prev, response]);
+      updater((prev:Array<User|Course>) => [...prev, response]);
 
       displaySuccess("User was registered!");
     } catch (error) {
@@ -129,12 +130,12 @@ const CommonSideBar = ({ choice, updater }: { choice: any; updater: any }) => {
     }
   };
 
-  const displayError = (message:string) => {
+  function displayError(message:string){
     setErrorMessage(message);
     setTimeout(() => setErrorMessage(""), 5000);
   };
 
-  const displaySuccess = (message:string) => {
+  function displaySuccess(message:string){
     setSuccessMessage(message);
     setTimeout(() => setSuccessMessage(""), 5000);
   };

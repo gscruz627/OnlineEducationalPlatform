@@ -1,7 +1,7 @@
 import React from 'react';
 import './styles/Topbar.css';
 
-const Topbar = () => {
+function Topbar(){
   return (
     <header className='topbar'>
         <span role="img" aria-label="Book Icon">&#128212;</span>

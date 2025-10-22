@@ -1,26 +1,27 @@
 import { useState, useEffect } from "react";
-import "../src/App.css";
-import "./styles/Instructors.css";
-import state from "../store";
 import { useSnapshot } from "valtio";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import CommonSideBar from "../components/CommonSideBar";
+import state from "../store";
 import checkAuth from "../functions";
 import Loading from "../components/Loading";
+import type { User } from "../sources";
+import "../src/App.css";
+import "./styles/Instructors.css";
 
-const Members = () => {
+function Members(){
   const { kind } = useParams();
+  const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState<boolean>(false);
-  const snap = useSnapshot(state);
   const [searchTerm, setSearchTerm] = useState("");
-  const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
 
   // Data for Students and Instructors
-  const [students, setStudents] = useState<Array<any>>([]);
-  const [allStudents, setAllStudents] = useState<Array<any>>([]);
-  const [instructors, setInstructors] = useState<Array<any>>([]);
-  const [allInstructors, setAllInstructors] = useState<Array<any>>([]);
+  const [students, setStudents] = useState<Array<User>>([]);
+  const [allStudents, setAllStudents] = useState<Array<User>>([]);
+  const [instructors, setInstructors] = useState<Array<User>>([]);
+  const [allInstructors, setAllInstructors] = useState<Array<User>>([]);
   const [editing, setEditing] = useState("");
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
@@ -28,7 +29,6 @@ const Members = () => {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (kind === "instructor") {
@@ -42,7 +42,7 @@ const Members = () => {
     }
   }, [kind]);
 
-  const getAllInstructors = async () => {
+  async function getAllInstructors(){
     setLoading(true);
     try{
       await checkAuth(navigate);
@@ -65,7 +65,7 @@ const Members = () => {
     }
   };
 
-  const getAllStudents = async () => {
+  async function getAllStudents(){
     setLoading(true);
     try{
       await checkAuth(navigate);
@@ -88,7 +88,7 @@ const Members = () => {
     }
   };
 
-  const executeEdit = async (e: React.FormEvent, i: number, id: string) => {
+  async function executeEdit(e: React.FormEvent, i: number, id: string){
     setLoading(true);
     e.preventDefault();
     if (
@@ -168,17 +168,17 @@ const Members = () => {
     }
   };
 
-  const editMember = (i: number) => {
+  async function editMember(i: number){
     if (i === editIndex) {
       setEditIndex(null);
       setEditing("");
       return;
     }
     setEditIndex(i);
-    setEditing(kind === "instructor" ? instructors[i].name : students[i].name);
+    setEditing(kind === "instructor" ? instructors[i].name! : students[i].name!);
   };
 
-  const deleteMember = (i: number) => {
+  async function deleteMember(i: number){
     if (i === deleteIndex) {
       setDeleteIndex(null);
       return;
@@ -186,7 +186,7 @@ const Members = () => {
     setDeleteIndex(i);
   };
 
-  const executeDelete = async (id: string) => {
+  async function executeDelete(id: string){
     setLoading(true);
     let request = null;
     try {
@@ -238,26 +238,27 @@ useEffect(() => {
 
   if (kind === "instructor") {
     const filteredInstructors = (allInstructors || []).filter(
-        (instructor: any) =>
-          (instructor?.Email || "").toLowerCase().includes(search.toLowerCase()) ||
-          (instructor?.Name || "").toLowerCase().includes(search.toLowerCase())
+        (instructor: User) =>
+          (instructor?.email || "").toLowerCase().includes(search.toLowerCase()) ||
+          (instructor?.name || "").toLowerCase().includes(search.toLowerCase())
       );
       setInstructors(filteredInstructors);
     } else {
       const filteredStudents = (allStudents || []).filter(
-        (student: any) =>
-          (student?.Email || "").toLowerCase().includes(search.toLowerCase()) ||
-          (student?.Name || "").toLowerCase().includes(search.toLowerCase())
+        (student: User) =>
+          (student?.email || "").toLowerCase().includes(search.toLowerCase()) ||
+          (student?.name || "").toLowerCase().includes(search.toLowerCase())
       );
       setStudents(filteredStudents);
     }
   }, [searchTerm, allStudents, allInstructors, kind]);
+
   return (
     <>
     {loading && <Loading/>}
     <div className="context-menu">
       <CommonSideBar
-        choice={kind}
+        choice={kind!}
         updater={kind === "instructor" ? setInstructors : setStudents}
       />
       <div>
@@ -297,7 +298,7 @@ useEffect(() => {
                 <div>
                   <button
                     style={{ color: "brown" }}
-                    onClick={() => executeDelete(instructors[deleteIndex].id)}
+                    onClick={() => executeDelete(instructors[deleteIndex].id!)}
                   >
                     Yes
                   </button>
@@ -325,7 +326,7 @@ useEffect(() => {
                 </div>
                 <div>
                   {i === editIndex ? (
-                    <form onSubmit={(e) => executeEdit(e, i, instructor.id)}>
+                    <form onSubmit={(e) => executeEdit(e, i, instructor.id!)}>
                       <input
                         className="inline-input"
                         type="text"
@@ -363,7 +364,7 @@ useEffect(() => {
                   {editIndex === i ? (
                     <button
                       style={{ backgroundColor: "#298D29", color: "#FFF" }}
-                      onClick={(e) => executeEdit(e, i, instructor.id)}
+                      onClick={(e) => executeEdit(e, i, instructor.id!)}
                       >
                       <i className="fa-solid fa-check"></i>
                     </button>
@@ -391,7 +392,7 @@ useEffect(() => {
                 <div>
                   <button
                     style={{ color: "brown" }}
-                    onClick={() => executeDelete(students[deleteIndex].id)}
+                    onClick={() => executeDelete(students[deleteIndex].id!)}
                     >
                     Yes
                   </button>
@@ -419,7 +420,7 @@ useEffect(() => {
                 </div>
                 <div>
                   {i === editIndex ? (
-                    <form onSubmit={(e) => executeEdit(e, i, student.id)}>
+                    <form onSubmit={(e) => executeEdit(e, i, student.id!)}>
                       <input
                         className="inline-input"
                         type="text"
@@ -455,7 +456,7 @@ useEffect(() => {
                   {editIndex === i ? (
                     <button
                       style={{ backgroundColor: "#298D29", color: "#FFF" }}
-                      onClick={(e) => executeEdit(e, i, student.id)}
+                      onClick={(e) => executeEdit(e, i, student.id!)}
                       >
                       <i className="fa-solid fa-check"></i>
                     </button>

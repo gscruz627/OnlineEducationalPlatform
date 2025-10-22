@@ -1,25 +1,27 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import "./styles/CourseAndSection.css";
 import state from "../store";
 import checkAuth from "../functions";
 import Loading from "../components/Loading";
+import type { Course, Section, User } from "../sources";
+import "./styles/CourseAndSection.css";
 
-const AdminCourse = () => {
+function AdminCourse(){
   const { courseId } = useParams();
   const navigate = useNavigate();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
 
   const [loading, setLoading] = useState<boolean>(false);
-  const [course, setCourse] = useState<any>("");
+  const [course, setCourse] = useState<Course | null>(null);
   const [title, setTitle] = useState("");
   const [courseCode, setCourseCode] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [sections, setSections] = useState<Array<any>>([]);
-  const [instructors, setInstructors] = useState<Array<any>>([]);
+  const [sections, setSections] = useState<Array<Section>>([]);
+  const [instructors, setInstructors] = useState<Array<User>>([]);
 
   const [newSectionCode, setNewSectionCode] = useState("");
-  const [selectedInstructor, setSelectedInstructor] = useState<any>(null);
+  // Selected Instructor ID
+  const [selectedInstructor, setSelectedInstructor] = useState<string>("");
 
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -28,7 +30,7 @@ const AdminCourse = () => {
 
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const loadCourseInfo = async () => {
+  async function loadCourseInfo(){
     setLoading(true);
     try {
       await checkAuth(navigate);
@@ -63,7 +65,7 @@ const AdminCourse = () => {
     }
   };
 
-  const loadSections = async () => {
+  async function loadSections(){
     setLoading(true);
     try {
       await checkAuth(navigate);
@@ -84,7 +86,7 @@ const AdminCourse = () => {
     }
   };
 
-  const loadInstructors = async () => {
+  async function loadInstructors(){
     setLoading(true);
     try{
       await checkAuth(navigate);
@@ -105,12 +107,12 @@ const AdminCourse = () => {
     }
   };
 
-  const edit = async (e: React.FormEvent) => {
+  async function edit(e: React.FormEvent){
     e.preventDefault();
     if (
-      title === course.title &&
-      courseCode === course.courseCode &&
-      imageUrl === course.imageURL
+      title === course!.title &&
+      courseCode === course!.courseCode &&
+      imageUrl === course!.imageURL
     )
     return;
     
@@ -151,7 +153,7 @@ const AdminCourse = () => {
     }
   };
 
-  const createSection = async (e: React.FormEvent) => {
+  async function createSection(e: React.FormEvent){
     
     e.preventDefault();
     if (!newSectionCode || !selectedInstructor) {
@@ -195,7 +197,7 @@ const AdminCourse = () => {
     }
   };
 
-  const deleteCourse = async () => {
+  async function deleteCourse(){
     setLoading(true);
     try {
       await checkAuth(navigate);
@@ -211,10 +213,7 @@ const AdminCourse = () => {
         setSuccessMessage(
           "Course was removed! You will be redirected in 5 seconds"
         );
-        setTimeout(() => {
-          setSuccessMessage("");
           navigate("/admin_courses");
-        }, 5000);
       }
     } catch (error) {
       setErrorMessage("Something wrong happened! Try Again");
@@ -329,7 +328,7 @@ const AdminCourse = () => {
             value={selectedInstructor}
             onChange={(e) => setSelectedInstructor(e.target.value)}
           >
-            {instructors?.map((instructor:any, i:number) => (
+            {instructors?.map((instructor:User, i:number) => (
               <option
               style={{
                 backgroundColor: "#FFF",
@@ -365,12 +364,12 @@ const AdminCourse = () => {
                   navigate(`/admin_individual_section/${section.id}`)
                 }
               >
-                <img src={course.imageURL} alt="course" />
+                <img src={course?.imageURL} alt="course" />
                 <div>
                   <h2>
-                    {course.courseCode} - {section.sectionCode}
+                    {course?.courseCode} - {section.sectionCode}
                   </h2>
-                  <p>{course.title}</p>
+                  <p>{course?.title}</p>
                 </div>
               </div>
             ))}

@@ -1,22 +1,25 @@
-import React, { useEffect, useState } from "react";
-import "../src/App.css";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSnapshot } from "valtio";
+import Loading from "../components/Loading";
 import state from "../store";
 import checkAuth from "../functions";
-import Loading from "../components/Loading";
+import type { User } from "../sources";
+import "../src/App.css";
 
-const Profile = () => {
+function Profile(){
+
   const { userId } = useParams();
-  const [user, setUser] = useState<any>(null);
-  const [role, setRole] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(false);
   const snap = useSnapshot(state);
   const isLocalUser = snap.user?.userId === userId;
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
   const navigate = useNavigate();
 
-  const loadUserInformation = async () => {
+  const [user, setUser] = useState<User|null>(null);
+  const [role, setRole] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+
+  async function loadUserInformation(){
     setLoading(true);
     let request = null;
     try {
@@ -49,7 +52,7 @@ const Profile = () => {
       loadUserInformation();
     } else {
       setUser(snap.user);
-      setRole(snap.user?.role);
+      setRole(snap.user?.role!);
     }
   }, []);
   

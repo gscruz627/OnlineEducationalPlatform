@@ -1,6 +1,4 @@
-import React from "react";
-
-const Error = () => {
+function Error(){
   return (
     <div
       style={{

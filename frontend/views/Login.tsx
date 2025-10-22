@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import "./styles/Auth.css";
-import "../src/App.css";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import state from "../store";
 import Loading from "../components/Loading";
+import type { CustomJwtPayload } from "../sources";
+import "./styles/Auth.css";
+import "../src/App.css";
 
-const Login = () => {
+function Login(){
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -14,7 +15,7 @@ const Login = () => {
   const [error, setError] = useState<string>("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState<boolean>(false);
-  const navigate = useNavigate();
+
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
 
   async function login(e: React.FormEvent){
@@ -32,7 +33,7 @@ const Login = () => {
         setError(tokens);
         return;
       }
-      const contents = jwtDecode<any>(tokens.accessToken);
+      const contents = jwtDecode<CustomJwtPayload>(tokens.accessToken);
       const usernameResponse = contents["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
       const userId = contents["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
       const emailResponse = contents["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"];

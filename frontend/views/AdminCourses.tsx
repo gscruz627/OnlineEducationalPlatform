@@ -1,29 +1,25 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useSnapshot } from "valtio";
 import { useNavigate } from "react-router-dom";
 import CommonSideBar from "../components/CommonSideBar";
-import "../src/App.css";
-import "./styles/Instructors.css";
 import state from "../store";
 import checkAuth from "../functions";
 import Loading from "../components/Loading";
+import type { Course } from "../sources";
+import "../src/App.css";
+import "./styles/Instructors.css";
 
-const AdminCourses = () => {
+function AdminCourses(){
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [allCourses, setAllCourses] = useState<Array<any>>([]);
-  const [courses, setCourses] = useState<Array<any>>([]);
+  const [allCourses, setAllCourses] = useState<Array<Course>>([]);
+  const [courses, setCourses] = useState<Array<Course>>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const snap = useSnapshot(state);
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
 
-  useEffect(() => {
-    getAllCourses();
-  }, []);
-
-  const getAllCourses = async () => {
+  async function getAllCourses(){
     setLoading(true);
     try{
       await checkAuth(navigate);
@@ -45,11 +41,15 @@ const AdminCourses = () => {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
-    const filteredCourses = allCourses.filter((course: any) => course.title.includes(searchTerm) || course.courseCode.includes(searchTerm));
+    const filteredCourses = allCourses.filter((course: Course) => course.title.toLowerCase().includes(searchTerm.toLowerCase()) || course.courseCode.toLowerCase().includes(searchTerm.toLowerCase()));
     setCourses(filteredCourses);
   }, [searchTerm])
+
+  useEffect(() => {
+    getAllCourses();
+  }, []);
 
   return (
     <>
@@ -73,7 +73,7 @@ const AdminCourses = () => {
         <div className="course-card-holder">
           {courses &&
             courses[0] &&
-            courses.map((course:any, i:number) => (
+            courses.map((course:Course, i:number) => (
               <div
               key={course.id}
               className="course-card"

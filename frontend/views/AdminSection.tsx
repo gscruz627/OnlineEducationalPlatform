@@ -1,23 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import "../src/App.css";
-import "./styles/Instructors.css";
-import "./styles/CourseAndSection.css";
 import state from "../store";
 import checkAuth from "../functions";
 import Loading from "../components/Loading";
+import type { User, Section } from "../sources";
+import "../src/App.css";
+import "./styles/Instructors.css";
+import "./styles/CourseAndSection.css";
 
-const Section = () => {
+function Section(){
 
   const { sectionId } = useParams();
   const navigate = useNavigate();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
 
-  const [section, setSection] = useState<any>("");
+  const [section, setSection] = useState<Section | null>(null);
   const [sectionCode, setSectionCode] = useState("");
   const [instructorId, setInstructorId] = useState<string | null>(null);
-  const [students, setStudents] = useState<Array<any>>([]);
-  const [instructors, setInstructors] = useState<Array<any>>([]);
+  const [students, setStudents] = useState<Array<User>>([]);
+  const [instructors, setInstructors] = useState<Array<User>>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
   const [errorMessage, setErrorMessage] = useState("");
@@ -29,17 +30,17 @@ const Section = () => {
   const [errorExpell, setErrorExpell] = useState("");
   const [successExpell, setSuccessExpell] = useState("");
 
-  const handleFetchError = (error: string) => {
+  async function handleFetchError(error: string){
     setErrorMessage(error);
     setTimeout(() => setErrorMessage(""), 5000);
   };
 
-  const handleFetchSuccess = (success: string) => {
+  async function handleFetchSuccess(success: string){
     setSuccessMessage(success);
     setTimeout(() => setSuccessMessage(""), 5000);
   };
 
-  const loadSectionInfo = async () => {
+  async function loadSectionInfo(){
     setLoading(true);
     try {
       await checkAuth(navigate);
@@ -56,6 +57,7 @@ const Section = () => {
       }
       const response = await request.json();
       setSection(response);
+
     } catch (error) {
       handleFetchError("Something went wrong! Try Again");
     } finally {
@@ -63,7 +65,7 @@ const Section = () => {
     }
   };
 
-  const loadInstructors = async () => {
+  async function loadInstructors(){
     setLoading(true)
     try {
       await checkAuth(navigate);
@@ -80,7 +82,7 @@ const Section = () => {
     }
   };
 
-  const loadStudents = async () => {
+  async function loadStudents(){
     setLoading(true);
     try {
       await checkAuth(navigate);
@@ -107,16 +109,16 @@ const Section = () => {
   }, []);
 
   useEffect(() => {
-    setInstructorId(section.instructorID);
-    setSectionCode(section.sectionCode);
+    setInstructorId(section?.InstructorID ?? section?.instructorID ?? "");
+    setSectionCode(section?.sectionCode ?? "");
   }, [section]);
 
-  const edit = async (e: React.FormEvent) => {
+  async function edit (e: React.FormEvent){
     setLoading(true);
     e.preventDefault();
     if (
-      sectionCode === section.sectionCode &&
-      instructorId === section.InstructorID
+      sectionCode === section!.sectionCode &&
+      instructorId === section!.InstructorID
     )
     return;
 
@@ -131,7 +133,7 @@ const Section = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            courseId: section.courseId ? section.courseId : section.courseID,
+            courseId: section!.courseId ? section!.courseId : section!.courseID,
             sectionCode,
             instructorId,
           }),
@@ -140,8 +142,8 @@ const Section = () => {
 
       if (!request.ok) {
         handleFetchError("There is a section with that code already!");
-        setSectionCode(section.sectionCode);
-        setInstructorId(section.InstructorID);
+        setSectionCode(section!.sectionCode);
+        setInstructorId(section!.instructorID!);
         return;
       }
 
@@ -157,9 +159,10 @@ const Section = () => {
     }
   };
 
-  const switchActive = async () => {
+  async function switchActive(){
     setLoading(true);
     try {
+      const isCurrentlyActive = section?.active ?? section?.isActive ?? false;
       await checkAuth(navigate);
       const request = await fetch(
         `${SERVER_URL}/api/sections/${sectionId}`,
@@ -167,7 +170,7 @@ const Section = () => {
           method: "PATCH",
           headers: { Authorization: `Bearer ${state.token}`, "Content-Type" : "application/json"},
           body: JSON.stringify({
-            isActive: !section.active
+            isActive: !isCurrentlyActive
           })
         }
       );
@@ -188,7 +191,7 @@ const Section = () => {
     }
   };
 
-  const deleteSection = async (e: React.FormEvent) => {
+  async function deleteSection(e: React.FormEvent){
     setLoading(true);
     e.preventDefault();
     try {
@@ -203,23 +206,17 @@ const Section = () => {
           },
         }
       );
-      console.log("here 3");
       if (!request.ok) {
         handleFetchError("Something went wrong");
       }
-        console.log("1");
         handleFetchSuccess(
           "Section was removed! You will be redirected in 5 seconds"
         );
-        console.log("2");
-        setTimeout(() => {
-          console.log("3");
           navigate(
             `/admin_individual_course/${
-              section.courseID ? section.courseID : section.courseId
+              section!.courseID ? section!.courseID : section!.courseId
             }`
           );
-        }, 5000);
     } catch (error) {
       handleFetchError("Something wrong happened! Try again");
     } finally {
@@ -227,7 +224,7 @@ const Section = () => {
     }
   };
 
-  const executeExpell = async (studentId: string) => {
+  async function executeExpell(studentId: string){
     setLoading(true);
     try {
       await checkAuth(navigate);
@@ -249,7 +246,7 @@ const Section = () => {
       if (request.ok) {
         setSuccessExpell("Student was expelled successfully");
         setStudents((prevStudents) =>
-          prevStudents.filter((student:any) => student.id !== studentId)
+          prevStudents.filter((student:User) => student.id !== studentId)
         );
         setTimeout(() => setSuccessExpell(""), 5000);
       }
@@ -266,8 +263,8 @@ const Section = () => {
     {loading && <Loading/>}
     <div className="context-menu">
       <form className="form-container" onSubmit={edit}>
-        <Link to={`/admin_individual_course/${section.courseID}`}>
-          Back to: "{section.course?.title}"
+        <Link to={`/admin_individual_course/${section?.courseID ?? section?.courseId}`}>
+          Back to: "{section?.course?.title}"
         </Link>
         <h1>Edit Section</h1>
         {errorMessage && (
@@ -297,7 +294,7 @@ const Section = () => {
           onChange={(e) => setInstructorId(e.target.value)}
         >
           {instructors &&
-            instructors.map((instructor:any) => (
+            instructors.map((instructor:User) => (
               <option key={instructor.id} value={instructor.id}>
                 {instructor.name}
               </option>
@@ -309,13 +306,13 @@ const Section = () => {
           style={{
             cursor: "pointer",
             fontWeight: "bolder",
-            color: section.isActive ? "brown" : "#298D29",
+            color: section?.isActive ? "brown" : "#298D29",
             marginTop: "1rem",
             fontFamily: "Sofia Pro",
             fontSize: "22px",
           }}
         >
-          Set to {section.isActive ? "Inactive" : "Active"}
+          Set to {section?.isActive ? "Inactive" : "Active"}
         </a>
 
         {confirmActive && (
@@ -354,7 +351,7 @@ const Section = () => {
               Are you sure you want to delete this section? All enrollments will
               be dropped and access will no longer be possible?
             </p>
-            <button type="button" onClick={(e) => {console.log("clicked yes"); deleteSection(e)}}>Yes</button>
+            <button type="button" onClick={(e) => {deleteSection(e)}}>Yes</button>
             <button type="button" onClick={() => setConfirmDelete(false)}>Cancel</button>
           </div>
         )}
@@ -362,7 +359,7 @@ const Section = () => {
 
       <div>
         <h1 style={{ textAlign: "center" }}>
-          {section.course?.courseCode} -{section.sectionCode}
+          {section?.course?.courseCode} -{section?.sectionCode}
         </h1>
         <h1>Students Enrolled</h1>
         <hr />
@@ -380,7 +377,7 @@ const Section = () => {
                 <div>
                   <button
                     style={{ color: "brown" }}
-                    onClick={() => executeExpell(students[expellIndex].id)}
+                    onClick={() => executeExpell(students[expellIndex].id!)}
                   >
                     Yes
                   </button>

@@ -211,8 +211,7 @@ namespace OnlineEducationaAPI.Controllers
 
             claims.Add(new Claim(ClaimTypes.Role, user.Role));
 
-            var signingKey = Environment.GetEnvironmentVariable("SIGNING_KEY")
-                 ?? "VeryVeryLongKeyVeryVeryLongKeyVeryVeryLongKeyVeryVeryLongKeyVeryVeryLongKeyVeryVeryLongKeyVeryVeryLongKeyVeryVeryLongKeyVeryVeryLongKeyVeryVeryLongKey";
+            var signingKey = Environment.GetEnvironmentVariable("SIGNING_KEY");
 
             SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey));
             SigningCredentials credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

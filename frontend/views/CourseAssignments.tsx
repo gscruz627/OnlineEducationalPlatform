@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import "../src/App.css";
-import "./styles/MyCourses.css";
-import "./styles/CourseAndSection.css";
 import state from "../store";
 import checkAuth from "../functions";
 import Loading from "../components/Loading";
+import type { Assignment, Section } from "../sources";
+import "../src/App.css";
+import "./styles/MyCourses.css";
+import "./styles/CourseAndSection.css";
 
-const CourseAssignment = () => {
+function CourseAssignment(){
   const { kind, sectionId } = useParams();
   const navigate = useNavigate();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
 
   const [loading, setLoading] = useState<boolean>(false);
-  const [section, setSection] = useState<any>(null);
-  const [assignments, setAssignments] = useState<Array<any>>([]);
+  const [section, setSection] = useState<Section|null>(null);
+  const [assignments, setAssignments] = useState<Array<Assignment>>([]);
   const [assignmentDate, setAssignmentDate] = useState<string>("");
   const [assignmentDescription, setAssignmentDescription] = useState<string>("");
   const [assignmentLimit, setAssignmentLimit] = useState<number|null>(null);
@@ -23,7 +24,7 @@ const CourseAssignment = () => {
   const [assignmentError, setAssignmentError] = useState("");
   const [assignmentSuccess, setAssignmentSucess] = useState("");
 
-  const loadSectionInformation = async () => {
+  async function loadSectionInformation(){
     setLoading(true);
     let request = null;
     try {
@@ -50,7 +51,8 @@ const CourseAssignment = () => {
       setLoading(false);
     }
   };
-  const loadAssignments = async () => {
+
+  async function loadAssignments(){
     setLoading(true);
     try{
       await checkAuth(navigate);
@@ -75,7 +77,7 @@ const CourseAssignment = () => {
     }
   };
 
-  const createAssignment = async (e: React.FormEvent) => {
+  async function createAssignment(e: React.FormEvent){
     setLoading(true);
     e.preventDefault();
     let request = null;
@@ -125,6 +127,7 @@ const CourseAssignment = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     loadSectionInformation();
     loadAssignments();

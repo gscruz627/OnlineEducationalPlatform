@@ -1,7 +1,6 @@
-import React from "react";
 import { Link } from "react-router-dom";
 
-const LoggedOut = () => {
+function LoggedOut(){
   return (
     <section className="font-formal" style={{ textAlign: "center" }}>
       <h1 className="color-gray" style={{ fontSize: "48px" }}>

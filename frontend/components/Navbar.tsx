@@ -1,22 +1,22 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { logout } from "../functions";
-import "./styles/Navbar.css";
 import { useSnapshot } from 'valtio';
 import state from '../store';
+import "./styles/Navbar.css";
 
 const Navbar = () => {
+
     const snap = useSnapshot(state);
     const navigate = useNavigate();
-
-    const handleLogout = useCallback(() => {
-        logout();
-        navigate("/signout");
-    }, [navigate]);
-
     const isAdmin = snap.user && snap.user.role === "admin";
     const isStudent = snap.user && snap.user.role === "student";
     const isInstructor = snap.user && snap.user.role === "instructor";
+
+    function handleLogout(){
+        navigate("/signout");
+        logout();
+    }
 
     return (
         <nav>

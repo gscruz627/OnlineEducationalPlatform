@@ -1,22 +1,24 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import state from "../store";
 import { useSnapshot } from "valtio";
-import checkAuth from "../functions";
 import Loading from "../components/Loading";
+import state from "../store";
+import checkAuth from "../functions";
+import type { User, Section } from "../sources";
 
-const StudentList = () => {
+function StudentList(){
+  
   const { sectionId } = useParams();
-  const [section, setSection] = useState<any>(null);
-  const [students, setStudents] = useState<Array<any>>([]);
-  const [instructor, setInstructor] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
   const snap = useSnapshot(state);
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
 
-  const loadSectionInformation = async () => {
+  const [section, setSection] = useState<Section|null>(null);
+  const [students, setStudents] = useState<Array<User>>([]);
+  const [instructor, setInstructor] = useState<User|null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
+  async function loadSectionInformation(){
     setLoading(true);
     let request = null;
     try {
@@ -59,7 +61,8 @@ const StudentList = () => {
       setLoading(false);
     }
   };
-  const loadStudentsEnrolled = async () => {
+
+  async function loadStudentsEnrolled(){
     setLoading(true);
     try{
       await checkAuth(navigate);
@@ -83,10 +86,12 @@ const StudentList = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     loadSectionInformation();
     loadStudentsEnrolled();
   }, []);
+  
   return (
     <>
     {loading && <Loading/>}

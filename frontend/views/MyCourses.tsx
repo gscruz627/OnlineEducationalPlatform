@@ -1,21 +1,22 @@
 import { useEffect, useState } from "react";
-import "../src/App.css";
-import { useSnapshot } from "valtio";
-import state from "../store";
-import "./styles/MyCourses.css";
-import "./styles/CourseAndSection.css";
 import { useNavigate, useParams } from "react-router-dom";
 import checkAuth from "../functions";
 import Loading from "../components/Loading";
+import type { Section } from "../sources";
+import state from "../store";
+import "../src/App.css";
+import "./styles/MyCourses.css";
+import "./styles/CourseAndSection.css";
 
-const MyCourses = () => {
-  const { kind } = useParams();
-  const [sections, setSections] = useState<Array<any>>([]);
+function MyCourses(){
   const navigate = useNavigate();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
+
+  const { kind } = useParams();
+  const [sections, setSections] = useState<Array<Section>>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const loadSections = async () => {
+  async function loadSections(){
     setLoading(true);
     const route =
       kind === "instructor"
@@ -41,6 +42,7 @@ const MyCourses = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     loadSections();
   }, []);

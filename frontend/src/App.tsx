@@ -67,19 +67,19 @@ const App = () => {
           <Route path="/profile/:userId" element={isAuth ? <Profile /> : <Navigate to="/login" />} />
 
           {/* Admin Routes */}
-          <Route path="/admin_members/:kind" element={isAdmin ? <Members /> : <Navigate to="/404" />} />
-          <Route path="/admin_courses" element={isAdmin ? <AdminCourses /> : <Navigate to="/404" />} />
-          <Route path="/admin_individual_course/:courseId" element={isAdmin ? <AdminCourse /> : <Navigate to="/404" />} />
-          <Route path="/admin_individual_section/:sectionId" element={isAdmin ? <AdminSection /> : <Navigate to="/404" />} />
+          <Route path="/admin_members/:kind" element={isAdmin ? <Members /> : <Navigate to="/login" />} />
+          <Route path="/admin_courses" element={isAdmin ? <AdminCourses /> : <Navigate to="/login" />} />
+          <Route path="/admin_individual_course/:courseId" element={isAdmin ? <AdminCourse /> : <Navigate to="/login" />} />
+          <Route path="/admin_individual_section/:sectionId" element={isAdmin ? <AdminSection /> : <Navigate to="/login" />} />
 
           {/* Student & Instructor Routes */}
-          <Route path="/my_courses/:kind" element={isAuth ? <MyCourses /> : <Navigate to="/404" />} />
-          <Route path="/course_enrollment" element={isStudent ? <CourseEnrollment /> : <Navigate to="/404" />} />
+          <Route path="/my_courses/:kind" element={isAuth ? <MyCourses /> : <Navigate to="/login" />} />
+          <Route path="/course_enrollment" element={isStudent ? <CourseEnrollment /> : <Navigate to="/login" />} />
 
-          <Route path="/course_page/:kind/:sectionId/" element={isNonAdmin ? <CoursePage /> : <Navigate to="/404" />} />
-          <Route path="/course_page/:kind/:sectionId/assignments" element={isNonAdmin ? <CourseAssignments /> : <Navigate to="/404" />} />
-          <Route path="/course_page/:kind/:sectionId/assignments/:assignmentId" element={isNonAdmin ? <Assignment /> : <Navigate to="/404" />} />
-          <Route path="/course_page/:sectionId/students" element={isNonAdmin ? <StudentList /> : <Navigate to="/404" />} />
+          <Route path="/course_page/:kind/:sectionId/" element={isNonAdmin ? <CoursePage /> : <Navigate to="/login" />} />
+          <Route path="/course_page/:kind/:sectionId/assignments" element={isNonAdmin ? <CourseAssignments /> : <Navigate to="/login" />} />
+          <Route path="/course_page/:kind/:sectionId/assignments/:assignmentId" element={isNonAdmin ? <Assignment /> : <Navigate to="/login" />} />
+          <Route path="/course_page/:sectionId/students" element={isNonAdmin ? <StudentList /> : <Navigate to="/login" />} />
 
           {/* Catch-All Route */}
           <Route path="*" element={<Error />} />

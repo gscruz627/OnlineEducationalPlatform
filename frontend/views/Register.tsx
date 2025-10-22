@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./styles/Auth.css";
 import "../src/App.css";
 import { useNavigate } from "react-router-dom";
 import Loading from "../components/Loading";
 
 
-const Register = () => {
+function Register(){
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -37,12 +37,13 @@ const Register = () => {
       }
       navigate("/login");
     } catch(err: unknown){
-      setError("Something went wrong: " + err);
+      setError("Something went wrong: This user may already exist");
       return;
     } finally {
       setLoading(false);
     }
   }
+  
   return (
     <>
     {loading && <Loading/>}

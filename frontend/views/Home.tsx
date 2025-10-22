@@ -1,32 +1,26 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "../src/App.css";
 import { useSnapshot } from "valtio";
 import state from "../store";
 import checkAuth from "../functions";
 import Loading from "../components/Loading";
+import type { Submission, Section, Assignment, Announcement } from "../sources";
+import "../src/App.css";
 
-const Home = () => {
+function Home(){
   const navigate = useNavigate();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
  
-  const [loading, setLoading] = useState<boolean>(false);
-  const snap = useSnapshot(state);
   // Information for Instructor
-  const [sections, setSections] = useState<any>([]);
-  const [submissions, setSubmissions] = useState<any>([]);
-  const [assignments, setAssignments] = useState<any>([]);
-  const [announcements, setAnnouncements] = useState<any>([]);
+  const snap = useSnapshot(state);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [sections, setSections] = useState<Array<Section>>([]);
+  const [submissions, setSubmissions] = useState<Array<Submission>>([]);
+  const [assignments, setAssignments] = useState<Array<Assignment>>([]);
+  const [announcements, setAnnouncements] = useState<Array<Announcement>>([]);
 
-  useEffect(() => {
-    if (snap.user?.role === "instructor") {
-      sections.forEach((section:any) => loadAssignments(section.id));
-    } else {
-      sections.forEach((section:any) => loadAnnouncements(section.sectionId));
-    }
-  }, [sections]);
-
-  const loadAnnouncements = async (sectionId:string) => {
+  
+  async function loadAnnouncements(sectionId:string){
     setLoading(true);
     try{
 
@@ -42,11 +36,20 @@ const Home = () => {
       );
       if (request.ok) {
         const response = await request.json();
-        setAnnouncements((prev:any) => ({
-          ...prev,
-          [sectionId]: response, // Store assignments under sectionId
-        }));
+
+        console.log(response[0]);
+
+        setAnnouncements((prev: Array<Announcement>) => {
+  // Filter out any announcements already in state
+  const newAnnouncements = response.filter(
+    (newItem: Announcement) => !prev.some(item => item.id === newItem.id)
+  );
+
+  // Append all new announcements
+  return [...prev, ...newAnnouncements];
+});
       }
+
     } catch(err: unknown){
       alert("Fatal, something wrong happened! Please reload");
       return;
@@ -54,7 +57,26 @@ const Home = () => {
       setLoading(false);
     }
   };
-  const loadSections = async () => {
+
+useEffect(() => {
+  console.log("announcement updates:");
+  console.log(typeof(announcements));
+  console.log(announcements.length);
+  console.log(announcements[0], announcements[1])
+  announcements.forEach(element => {
+    console.log(element)
+  });
+}, [announcements]);
+
+  useEffect( () => {
+    console.log("assignments update: " + assignments);
+  }, [assignments])
+
+  useEffect( () => {
+    console.log("submissions updates: " + submissions)
+  })
+
+  async function loadSections(){
     setLoading(true);
     let route = "";
     if(snap.user?.role){
@@ -85,72 +107,96 @@ const Home = () => {
       setLoading(false);
     }
   };
+async function loadAssignments(sectionId: string) {
+  setLoading(true);
+  try {
+    await checkAuth(navigate);
 
-  const loadAssignments = async (sectionId:string) => {
-    setLoading(true);
-    try{
-      
-      await checkAuth(navigate);
-      const request = await fetch(
-        `${SERVER_URL}/api/assignments?sectionId=${sectionId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${state.token}`,
-          },
-        }
-      );
-      if (request.ok) {
-        const response = await request.json();
-        setAssignments((prev:any) => ({
-          ...prev,
-          [sectionId]: response, // Store assignments under sectionId
-        }));
-  
-        // Fetch submissions for each assignment
-        response.forEach((assignment:any) => loadSubmissions(assignment.id));
+    const request = await fetch(
+      `${SERVER_URL}/api/assignments?sectionId=${sectionId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${state.token}`,
+        },
       }
-    } catch(err: unknown){
-      alert("Fatal, something wrong happened! Please reload");
-      return;
-    } finally {
-      setLoading(false);
+    );
+
+    if (request.ok) {
+      const response: Array<Assignment> = await request.json();
+      console.log('Fetched assignments for section', sectionId, response);
+
+      // Add new assignments to state, avoiding duplicates
+      setAssignments((prev: Array<Assignment>) => {
+        const newAssignments = response.filter(
+          (newItem) => !prev.some(item => item.id === newItem.id)
+        );
+        return [...prev, ...newAssignments];
+      });
+
+      // Fetch submissions for each assignment
+      response.forEach((assignment: Assignment) => loadSubmissions(assignment.id));
     }
-  };
-  const loadSubmissions = async (assignmentId:string) => {
-    setLoading(true);
-    let request = null;
-    try {
-      await checkAuth(navigate);
-      request = await fetch(
-        `${SERVER_URL}/api/assignments/${assignmentId}/submissions`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${state.token}`,
-          },
-        }
-      );
-      const response = await request.json();
-      setSubmissions((prev:any) => ({
-        ...prev,
-        [assignmentId]: response, // Store submissions under assignmentId
-      }));
-    } catch (error) {
-      alert("Fatal Error, try again!");
-      return;
-    } finally {
-      setLoading(false);
+  } catch (err: unknown) {
+    alert("Fatal, something wrong happened! Please reload");
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+}
+
+
+async function loadSubmissions(assignmentId: string) {
+  setLoading(true);
+  try {
+    await checkAuth(navigate);
+
+    const request = await fetch(
+      `${SERVER_URL}/api/assignments/${assignmentId}/submissions`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${state.token}`,
+        },
+      }
+    );
+
+    if (request.ok) {
+      const response: Array<Submission> = await request.json();
+      console.log('Fetched submissions for assignment', assignmentId, response);
+
+      setSubmissions((prev: Array<Submission>) => {
+        // Filter out any submissions already in state
+        const newSubmissions = response.filter(
+          (newItem) => !prev.some(item => item.id === newItem.id)
+        );
+        return [...prev, ...newSubmissions];
+      });
+    } else {
+      console.error('Failed to fetch submissions for assignment', assignmentId);
     }
-  };
+  } catch (error) {
+    alert("Fatal Error, try again!");
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+}
+
+
   useEffect(() => {
-    console.log(typeof announcements);
-  }, [announcements]);
-  useEffect(() => {
-    if (snap.role !== "admin") {
+    if (snap.user?.role !== "admin") {
       loadSections();
     }
   }, []);
+
+  useEffect(() => {
+    if (snap.user?.role !== "admin") {
+      sections.forEach((section:Section) => loadAssignments(section.sectionId ?? section.id));
+      sections.forEach((section:Section) => loadAnnouncements(section.sectionId ?? section.id));
+    }
+  }, [sections]);
+
   return (
     <>
       {loading && <Loading /> }
@@ -192,128 +238,12 @@ const Home = () => {
           <h1>Created by Gustavo La Cruz, February 2025</h1>
         </section>
       )}
-      {snap.user && (snap.user.role === "student" || snap.user.role === "instructor") && (
-        <div style={{ fontFamily: "Lisu Bosa" }}>
-          <h1 className="color-gray">My Courses</h1>
-          <hr />
-          <div className="course-card-holder holder-xl">
-            {sections &&
-              sections.map((section:any) => (
-                <div
-                  key={section.id}
-                  className="course-card"
-                  onClick={() => navigate(`/course_page/${snap.user?.role}/${section.id ?? section.sectionId}`)}
-                >
-                  <img src={section.imageURL ?? section.course?.imageURL} />
-                  <div>
-                    <h2>
-                      {section.courseCode ?? section.course?.courseCode} - {section.sectionCode}
-                    </h2>
-                    <p>{section.title ?? section.course?.title}</p>
-                  </div>
-                </div>
-              ))}
-          </div>
-
-          <h1 className="color-gray">Announcements</h1>
-          <hr style={{ marginBottom: "1rem" }} />
-          {sections &&
-            sections.map((section:any) => (
-              <div key={section.id}>
-                <h2 style={{ fontFamily: "Sofia Pro", color: "red" }}>
-                  {section.courseCode ?? section.course?.courseCode} - {section.sectionCode}: {section.title ?? section.course?.title}
-                </h2>
-
-                {announcements[section.id] &&
-                announcements[section.id].length > 0 ? (
-                  announcements[section.id].map((announcement:any) => (
-                    <div
-                      key={announcement.id}
-                      className="announcement-box"
-                      style={{ margin: "1rem 0" }}
-                    >
-                      <h2>{announcement.title}</h2>
-                      <p>{announcement.description}</p>
-                      <hr />
-                    </div>
-                  ))
-                ) : (
-                  <p>No announcements to show</p>
-                )}
-              </div>
-            ))}
-        </div>
-      )}
-      {snap.user && snap.user.role === "instructor" && (
-        <div style={{ fontFamily: "Lisu Bosa" }}>
-          <h1 className="color-gray">Student Submissions</h1>
-          <hr />
-          <div>
-            {sections.map((section:any) => (
-              <div
-                key={section.id}
-                style={{ margin: "1rem 0", borderBottom: "1px dashed gray" }}
-              >
-                <h2 style={{ fontFamily: "Sofia Pro", color: "red" }}>
-                  {section.courseCode ?? section.course?.courseCode} - {section.sectionCode}: {section.title ?? section.course?.title}
-                </h2>
-                {assignments[section.id] &&
-                assignments[section.id].length > 0 ? (
-                  assignments[section.id].map((assignment:any) => (
-                    <div key={assignment.id}>
-                      <h2 style={{ color: "#1F6A6A" }}>{assignment.name}</h2>
-
-                      {submissions[assignment.id] &&
-                      submissions[assignment.id].length > 0 ? (
-                        <ul style={{ padding: "0" }}>
-                          {submissions[assignment.id].map((submission:any, i:number) => (
-                            <div className="member-item" key={submission.id}>
-                              <div>
-                                <span
-                                  className="member-item-user-logo"
-                                  style={{
-                                    fontSize: "48px",
-                                    textAlign: "center",
-                                  }}
-                                >
-                                 <i className="fa-solid fa-upload"></i>
-                                </span>
-                              </div>
-                              <div>
-                                <h2>
-                                  <Link to={`/profile/${submission.studentId}`}>
-                                    {snap.role === "instructor"
-                                      ? submission.studentName
-                                      : `Submission ${i + 1}`}
-                                  </Link>
-                                </h2>
-                                <p>
-                                  <b>Comments: </b>
-                                  {submission.comments}
-                                </p>
-                                {assignment.requiresFileSubmission && (
-                                  <p>
-                                    <b>FileName: </b>
-                                    {submission.submissionFilename}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>No submissions yet.</p> // Ensures assignment name is still shown
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <p>No assignments yet.</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {snap.user && snap.user?.role !== "admin" && <div style={{fontFamily: "Sofia Pro"}}>
+      <h1>Welcome to Online Educational Platform.</h1>
+      <p>View your courses here: </p>
+      <Link to={`/my_courses/${snap.user?.role}`}> My Courses</Link>
+      </div>
+      }
     </>
   );
 };

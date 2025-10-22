@@ -1,29 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import "../src/App.css";
-import "./styles/MyCourses.css";
 import state from "../store";
 import { useSnapshot } from "valtio";
 import checkAuth from "../functions";
 import Loading from "../components/Loading";
+import type { Course, Section, User } from "../sources";
+import "../src/App.css";
+import "./styles/MyCourses.css";
 
-const CourseEnrollment = () => {
+function CourseEnrollment(){
 
   const navigate = useNavigate();
-  const [loading, setLoading] = useState<boolean>(false);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [allCourses, setAllCourses] = useState<Array<any>>([]);
-  const [courses, setCourses] = useState<Array<any>>([]);
-  const [sections, setSections] = useState<Array<any>>([]);
-  const [course, setCourse] = useState<any>(null);
-  const [instructors, setInstructors] = useState<Array<any>>([]);
-  const [enrollmentError, setEnrollmentError] = useState<string>("");
-  const [enrollmentSuccess, setEnrollmentSuccess] = useState<string>("");
-
   const snap = useSnapshot(state);
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
 
-  const getAllCourses = async () => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [allCourses, setAllCourses] = useState<Array<Course>>([]);
+  const [courses, setCourses] = useState<Array<Course>>([]);
+  const [sections, setSections] = useState<Array<Section>>([]);
+  const [course, setCourse] = useState<Course|null>(null);
+  const [instructors, setInstructors] = useState<Array<User>>([]);
+  const [enrollmentError, setEnrollmentError] = useState<string>("");
+  const [enrollmentSuccess, setEnrollmentSuccess] = useState<string>("");
+
+
+  async function getAllCourses(){
     setLoading(true);
     try{
       await checkAuth(navigate);
@@ -45,7 +47,8 @@ const CourseEnrollment = () => {
       setLoading(false);
     }
   };
-  const selectCourse = async (course:any, courseId:string) => {
+
+  async function selectCourse(course:Course, courseId:string){
     setLoading(true);
     try{
 
@@ -71,7 +74,8 @@ const CourseEnrollment = () => {
       setLoading(false);
     }
   };
-  const loadInstructors = async () => {
+
+  async function loadInstructors(){
     setLoading(true);
     try{
       await checkAuth(navigate);
@@ -91,7 +95,8 @@ const CourseEnrollment = () => {
       setLoading(false);
     }
   };
-  const executeEnroll = async (sectionId:string) => {
+
+  async function executeEnroll(sectionId:string){
     setLoading(true);
     try{
       
@@ -136,14 +141,16 @@ const CourseEnrollment = () => {
       setLoading(false);
     }
   };
+
   useEffect( () => {
-    setCourses( allCourses.filter( c => c.title.toincludes(searchTerm) || c.courseCode.includes(searchTerm)));
+    setCourses( allCourses.filter( c => c.title.toLowerCase().includes(searchTerm.toLowerCase()) || c.courseCode.toLowerCase().includes(searchTerm.toLowerCase())));
   }, [searchTerm])
 
   useEffect(() => {
     getAllCourses();
     loadInstructors();
   }, []);
+  
   return (
     <>
     {loading && <Loading/>}

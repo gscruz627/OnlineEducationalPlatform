@@ -1,27 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import "../src/App.css";
 import state from "../store";
 import { useSnapshot } from "valtio";
 import checkAuth from "../functions";
 import Loading from "../components/Loading";
+import type { Section, Assignment, Submission } from "../sources";
+import "../src/App.css";
 
-const Assignment = () => {
+function Assignment(){
   const { kind, sectionId, assignmentId } = useParams();
   const navigate = useNavigate();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
   const snap = useSnapshot(state);
 
   const [loading, setLoading] = useState<boolean>(false);
-
-  const [section, setSection] = useState<any>(null);
-  const [assignment, setAssignment] = useState<any>(null);
+  const [section, setSection] = useState<Section|null>(null);
+  const [assignment, setAssignment] = useState<Assignment|null>(null);
   const [assignmentDate, setAssignmentDate] = useState<string|null>(null);
   const [assignmentDescription, setAssignmentDescription] = useState<string>("");
   const [assignmentLimit, setAssignmentLimit] = useState<number|null>(null);
   const [assignmentName, setAssignmentName] = useState<string>("");
   const [assignmentRequiresFile, setAssignmentRequiresFile] = useState<boolean>(false);
-  const [submissions, setSubmissions] = useState<Array<any>>([]);
+  const [submissions, setSubmissions] = useState<Array<Submission>>([]);
   const [assignmentError, setAssignmentError] = useState<string>("");
   const [assignmentSuccess, setAssignmentSucess] = useState<string>("");
   const [submissionOpen, setSubmissionOpen] = useState<boolean>(false);
@@ -30,7 +30,7 @@ const Assignment = () => {
   const [comment, setComment] = useState("");
   const [filename, setFilename] = useState("");
 
-  const loadSectionInformation = async () => {
+  async function loadSectionInformation(){
     setLoading(true);
     let request = null;
     try {
@@ -57,7 +57,8 @@ const Assignment = () => {
       setLoading(false);
     }
   };
-  const loadAssignmentInfo = async () => {
+
+  async function loadAssignmentInfo(){
     setLoading(true);
     let request = null;
     try {
@@ -84,7 +85,7 @@ const Assignment = () => {
       }
       const route =
         kind === "instructor"
-          ? `${SERVER_URL}/api/assignments/submissions?assignmentId=${assignmentId}`
+          ? `${SERVER_URL}/api/assignments/${assignmentId}/submissions?assignmentId=${assignmentId}`
           : `${SERVER_URL}/api/assignments/${assignmentId}/submissions?studentId=${snap.user?.userId}`;
       const submissionsRequest = await fetch(route, {
         method: "GET",
@@ -103,14 +104,14 @@ const Assignment = () => {
     }
   };
 
-  const editAssignment = async (e: React.FormEvent) => {
+  async function editAssignment(e: React.FormEvent){
     setLoading(true);
     e.preventDefault();
     let request = null;
     try {
       await checkAuth(navigate);
       request = await fetch(
-        `${SERVER_URL}/api/assignments/${assignment.id}`,
+        `${SERVER_URL}/api/assignments/${assignment?.id}`,
         {
           method: "PATCH",
           headers: {
@@ -122,7 +123,7 @@ const Assignment = () => {
             duedate: assignmentDate,
             isactive: true,
             name: assignmentName,
-            sectionID: assignment.sectionID,
+            sectionID: assignment?.sectionID,
             submissionLimit: assignmentLimit,
             requiresFileSubmission: assignmentRequiresFile,
           }),
@@ -156,10 +157,10 @@ const Assignment = () => {
     }
   };
 
-  const executeCreateSubmission = async (e: React.FormEvent) => {
+  async function executeCreateSubmission(e: React.FormEvent){
     setLoading(true);
     e.preventDefault();
-    if (new Date(assignment.dueDate) < new Date()) {
+    if (new Date(assignment!.dueDate) < new Date()) {
       setAssignmentError(
         "The submission date has passed while you had this submission box open! You are not able to submit anymore"
       );
@@ -214,6 +215,7 @@ const Assignment = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     loadSectionInformation();
     loadAssignmentInfo();
@@ -435,10 +437,10 @@ const Assignment = () => {
                   <b>Comments: </b>
                   {submission.comments}
                 </p>
-                {assignment.requiresFileSubmission && (
+                {assignment!.requiresFileSubmission && (
                   <p>
                     <b>FileName: </b>
-                    {submission.submissionFilename}
+                    {submission!.submissionFilename}
                   </p>
                 )}
               </div>
@@ -451,7 +453,7 @@ const Assignment = () => {
               {assignment && assignment.submissionLimit}{" "}
             </p>
             {assignment &&
-              submissions.length < assignment.submissionLimit &&
+              (submissions.length < assignment.submissionLimit) &&
               new Date(assignment.dueDate) > new Date() && (
                 <button
                 style={{ margin: "1rem 0" }}

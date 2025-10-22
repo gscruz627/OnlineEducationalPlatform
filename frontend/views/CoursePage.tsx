@@ -1,28 +1,28 @@
 import { useState, useEffect } from "react";
-import "../src/App.css";
-import "./styles/CourseAndSection.css";
-import "./styles/MyCourses.css";
 import { useNavigate, useParams } from "react-router-dom";
 import state from "../store";
 import checkAuth from "../functions";
 import Loading from "../components/Loading";
+import type { Announcement, Section } from "../sources";
+import "../src/App.css";
+import "./styles/CourseAndSection.css";
+import "./styles/MyCourses.css";
 
-const CoursePage = () => {
+function CoursePage(){
   const { kind, sectionId } = useParams();
   const SERVER_URL = import.meta.env["VITE_SERVER_URL"];
-  const [loading, setLoading] = useState<boolean>(false);
+  const navigate = useNavigate();
 
-  const [section, setSection] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [section, setSection] = useState<Section|null>(null);
   const [announcementTitle, setAnnouncementTitle] = useState<string>("");
   const [announcementDescription, setAnnouncementDescription] = useState<string>("");
-  const [announcements, setAnnouncements] = useState<Array<any>>([]);
-
+  const [announcements, setAnnouncements] = useState<Array<Announcement>>([]);
   const [announcementError, setAnnounncementError] = useState("");
   const [announcementSuccess, setAnnouncementSucess] = useState("");
 
-  const navigate = useNavigate();
 
-  const loadSectionInformation = async () => {
+  async function loadSectionInformation(){
     setLoading(true);
     let request = null;
     try {
@@ -49,7 +49,8 @@ const CoursePage = () => {
       setLoading(false);
     }
   };
-  const loadAnnouncements = async () => {
+
+  async function loadAnnouncements(){
     setLoading(true);
     try{
       await checkAuth(navigate);
@@ -73,7 +74,8 @@ const CoursePage = () => {
       setLoading(false);
     }
   };
-  const createAnnouncement = async (e: React.FormEvent) => {
+
+  async function createAnnouncement(e: React.FormEvent){
     setLoading(true);
     e.preventDefault();
     let request = null;
@@ -119,6 +121,7 @@ const CoursePage = () => {
     loadSectionInformation();
     loadAnnouncements();
   }, []);
+  
   return (
     <>
     {loading && <Loading/> }
